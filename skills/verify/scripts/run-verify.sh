@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Usage: bash run-verify.sh [TASK [tests,lint,build,typecheck|all]]
 # Also accepts: --task TASK --gates GATES
+# Exit codes: 0=PASS, 1=ECHEC, 2=BLOQUE/invalid invocation, 3=PARTIEL.
 set -uo pipefail
 
 TASK='Vérification automatique post-tâche'
@@ -42,9 +43,16 @@ if [[ ! -f $SCRIPT_DIR/check.sh ]]; then
   exit 2
 fi
 printf '[verify] Task: %s\n' "$TASK"
-bash "$SCRIPT_DIR/check.sh" "${ARGS[@]}"
-EXIT_CODE=$?
-# check.sh currently uses exit 0 for both PASS and PARTIEL.
-# Never promote that exit code to a claim of complete verification.
-printf '[verify] Runner exit code: %s. Use the gate verdict above; completion alone is not PASS.\n' "$EXIT_CODE"
+if bash "$SCRIPT_DIR/check.sh" "${ARGS[@]}"; then
+  EXIT_CODE=0
+else
+  EXIT_CODE=$?
+fi
+case $EXIT_CODE in
+  0) printf '[verify] PASS: check.sh reports successful selected gates; this does not authorize deployment.\n' ;;
+  1) printf '[verify] ECHEC: verification failed. Inspect the gate logs.\n' >&2 ;;
+  2) printf '[verify] BLOQUE: verification unavailable or invocation invalid. Inspect the diagnostics.\n' >&2 ;;
+  3) printf '[verify] PARTIEL: verification is incomplete; do not treat this as PASS.\n' >&2 ;;
+  *) printf '[verify] UNEXPECTED ERROR: check.sh exited with code %s; verification is not validated.\n' "$EXIT_CODE" >&2 ;;
+esac
 exit "$EXIT_CODE"
