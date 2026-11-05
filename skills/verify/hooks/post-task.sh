@@ -1,73 +1,73 @@
 #!/usr/bin/env bash
-# post-task.sh — Hook Claude Code : auto-déclenche le skill verify
-# après chaque complétion de tâche (événement PostToolUse:Bash ou Stop).
-#
-# Installation :
-#   1. Copier ce fichier dans .claude/hooks/post-task.sh
-#   2. Référencer dans .claude/hooks/hooks.json (voir hooks.json)
-#   3. Rendre exécutable : chmod +x .claude/hooks/post-task.sh
-#
-# Ce hook lit le contexte Claude Code depuis stdin (JSON),
-# détecte si une tâche/feature/étape vient d'être complétée,
-# et lance run-verify.sh si c'est le cas.
-
+# Claude Code hook: run verification after a completed task.
+# This hook is intentionally non-blocking: it always exits 0.
+# Install it through the Claude Code hooks configuration, not merely by copying it.
 set -uo pipefail
 
-# Lire le payload JSON de Claude Code depuis stdin
 INPUT=$(cat)
 
-# Extraire les champs utiles via python (disponible partout)
-TOOL_NAME=$(echo "${INPUT}" | python3 -c "
+if ! command -v python3 >/dev/null 2>&1; then
+  printf '[verify-hook] python3 unavailable; skipping verification.\n' >&2
+  exit 0
+fi
+
+read -r -d '' PARSE <<'PY' || true
 import json, sys
-data = json.load(sys.stdin)
-print(data.get('tool_name', '') or data.get('event', ''))
-" 2>/dev/null || echo "")
+try:
+    data = json.load(sys.stdin)
+except Exception:
+    print("|||")
+    sys.exit(0)
 
-TOOL_OUTPUT=$(echo "${INPUT}" | python3 -c "
-import json, sys
-data = json.load(sys.stdin)
-print(data.get('tool_output', '') or data.get('output', ''))
-" 2>/dev/null || echo "")
+event = str(data.get("hook_event_name") or "")
+tool = str(data.get("tool_name") or "")
+response = data.get("tool_response")
+if response is None:
+    response = data.get("tool_output") or data.get("output") or ""
+if not isinstance(response, str):
+    response = json.dumps(response, ensure_ascii=False)
+stop_active = bool(data.get("stop_hook_active") or False)
+print(f"{event}|||{tool}|||{stop_active}|||{response}")
+PY
 
-# Mots-clés qui indiquent une complétion de tâche/feature/étape
-COMPLETION_KEYWORDS="done|finished|completed|implemented|refactored|fixed|added|merged|shipped|deployed|PASS|feature complete|step complete|task complete"
+PARSED=$(printf '%s' "$INPUT" | python3 -c "$PARSE" 2>/dev/null || printf '|||')
+IFS='|||' read -r EVENT TOOL STOP_ACTIVE RESPONSE <<< "$PARSED"
 
-# Ne déclencher que si :
-# 1. L'événement est PostToolUse:Bash ou Stop
-# 2. La sortie contient des mots-clés de complétion
+if [[ $STOP_ACTIVE == True ]]; then
+  printf '[verify-hook] Stop verification already active; avoiding repeat run.\n' >&2
+  exit 0
+fi
+
+COMPLETION_PATTERN='done|finished|completed|implemented|refactored|fixed|added|merged|shipped|deployed|PASS|feature complete|step complete|task complete'
+
 SHOULD_VERIFY=false
-
-if [[ "${TOOL_NAME}" == *"Bash"* ]] || [[ "${TOOL_NAME}" == *"Stop"* ]]; then
-  if echo "${TOOL_OUTPUT}" | grep -qiE "${COMPLETION_KEYWORDS}"; then
+if [[ $EVENT == Stop || $EVENT == SubagentStop ]]; then
+  SHOULD_VERIFY=true
+elif [[ $EVENT == PostToolUse && $TOOL == Bash ]]; then
+  if grep -qiE "$COMPLETION_PATTERN" <<<"$RESPONSE"; then
     SHOULD_VERIFY=true
   fi
 fi
 
-# Vérifier aussi si un fichier de marqueur de tâche existe
-if [ -f ".verify/pending-task" ]; then
+if [[ -f .verify/pending-task ]]; then
   SHOULD_VERIFY=true
-  rm -f ".verify/pending-task"
+  rm -f .verify/pending-task
 fi
 
-if $SHOULD_VERIFY; then
-  echo "[hook:post-task] Complétion détectée — déclenchement de verify..."
-
-  # Trouver le script run-verify.sh (chemin relatif au projet)
-  VERIFY_SCRIPT=""
-  if [ -f ".claude/skills/verify/scripts/run-verify.sh" ]; then
-    VERIFY_SCRIPT=".claude/skills/verify/scripts/run-verify.sh"
-  elif [ -f "skills/verify/scripts/run-verify.sh" ]; then
-    VERIFY_SCRIPT="skills/verify/scripts/run-verify.sh"
-  fi
-
-  if [ -n "${VERIFY_SCRIPT}" ]; then
-    bash "${VERIFY_SCRIPT}" "Post-task auto-verify" "all"
-  else
-    echo "[hook:post-task] ⚠️  run-verify.sh non trouvé. Installe le skill verify dans .claude/skills/."
-  fi
-else
-  echo "[hook:post-task] Pas de complétion détectée — verify ignoré."
+if [[ $SHOULD_VERIFY != true ]]; then
+  printf '[verify-hook] No completion condition matched; verification skipped.\n' >&2
+  exit 0
 fi
 
-# Retourner 0 : ce hook est non-bloquant (PostToolUse)
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)" || exit 0
+PROJECT_ROOT="$(cd -- "$SCRIPT_DIR/../../.." && pwd)" || exit 0
+RUNNER="$PROJECT_ROOT/skills/verify/scripts/run-verify.sh"
+
+if [[ ! -f $RUNNER ]]; then
+  printf '[verify-hook] Runner not found: %s\n' "$RUNNER" >&2
+  exit 0
+fi
+
+printf '[verify-hook] Running verification.\n' >&2
+bash "$RUNNER" "Post-task verification" all
 exit 0

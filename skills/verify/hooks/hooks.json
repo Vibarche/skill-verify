@@ -1,30 +1,28 @@
 {
-  "_comment": "Hooks Claude Code pour le skill verify — auto-trigger après tâche complétée.",
-  "_install": "Copier ce fichier dans .claude/hooks/hooks.json (ou fusionner avec l'existant).",
-  "hooks": [
-    {
-      "event": "PostToolUse",
-      "matchers": [
-        { "tool_name": "Bash" }
-      ],
-      "hooks": [
-        {
-          "type": "command",
-          "command": "bash .claude/hooks/post-task.sh",
-          "timeout": 60
-        }
-      ]
-    },
-    {
-      "event": "Stop",
-      "matchers": [{}],
-      "hooks": [
-        {
-          "type": "command",
-          "command": "bash .claude/hooks/post-task.sh",
-          "timeout": 60
-        }
-      ]
-    }
-  ]
+  "_comment": "Plugin-style hooks configuration. Merge into the consuming project's Claude Code hooks configuration; do not assume that copying this file alone activates hooks.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/skills/verify/hooks/post-task.sh\"",
+            "timeout": 60
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/skills/verify/hooks/post-task.sh\"",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
 }
