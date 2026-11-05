@@ -1,138 +1,113 @@
 #!/usr/bin/env bash
-# check.sh — Gate runner pour le skill verify
-# Usage: bash check.sh [--tests] [--lint] [--build] [--typecheck] [--all]
-# Produit les logs dans .verify/<ts>/ et retourne 0 si PASS, 1 si ECHEC
-
+# Usage: bash check.sh [--tests] [--lint] [--build] [--typecheck] [--all] [--json]
 set -euo pipefail
 
-TS=$(date +%Y%m%dT%H%M%S)
+TS=$(date -u +%Y%m%dT%H%M%SZ)
 VERIFY_DIR=".verify/${TS}"
-mkdir -p "${VERIFY_DIR}"
+mkdir -p "$VERIFY_DIR"
 
 PASS=0
 FAIL=0
 SKIPPED=0
-SUMMARY=[]
+BLOQUE=0
+REPORT="$VERIFY_DIR/report.json"
 
-run_gate() {
-  local GATE_NAME="$1"
-  local CMD="$2"
-  local LOG_FILE="${VERIFY_DIR}/${GATE_NAME}.log"
+printf '[\n  "timestamp": "%s",\n  "gates": [\n' "$TS" > "$REPORT"
+FIRST=true
 
-  echo "[verify] Running gate: ${GATE_NAME} → ${CMD}"
-  if eval "${CMD}" > "${LOG_FILE}" 2>&1; then
-    echo "  ✅ ${GATE_NAME}: PASS"
-    PASS=$((PASS + 1))
-  else
-    echo "  ❌ ${GATE_NAME}: ECHEC (exit code $?)"
-    echo "  → Logs: ${LOG_FILE}"
-    FAIL=$((FAIL + 1))
-  fi
+add_result() {
+  local name=$1 status=$2 exit_code=$3 command=${4:-}
+  $FIRST || printf ',\n' >> "$REPORT"
+  FIRST=false
+  printf '    {"name": "%s", "status": "%s", "exit_code": %s, "command": "%s", "log": "%s"}' \
+    "$name" "$status" "$exit_code" "$command" "$VERIFY_DIR/$name.log" >> "$REPORT"
+  case $status in
+    PASS) PASS=$((PASS + 1)); printf '  ✅ %s: PASS\n' "$name" ;;
+    ECHEC) FAIL=$((FAIL + 1)); printf '  ❌ %s: ECHEC (exit %s)\n' "$name" "$exit_code" ;;
+    BLOQUE) BLOQUE=$((BLOQUE + 1)); printf '  🔒 %s: BLOQUE (%s)\n' "$name" "$command" ;;
+    SKIP) SKIPPED=$((SKIPPED + 1)); printf '  ⚠️  %s: SKIP (%s)\n' "$name" "$command" ;;
+  esac
 }
 
-# Détection auto des commandes disponibles
-detect_test_cmd() {
-  if [ -f "package.json" ]; then
-    if grep -q '"test"' package.json 2>/dev/null; then echo "npm test"; return; fi
+run_gate() {
+  local name=$1 cmd=$2 required=$3 log="$VERIFY_DIR/$1.log"
+  if [[ -z $cmd ]]; then
+    if [[ $required == required ]]; then add_result "$name" BLOQUE 2 'command not detected'
+    else add_result "$name" SKIP 0 'command not detected'; fi
+    return
   fi
-  if [ -f "pytest.ini" ] || [ -f "pyproject.toml" ]; then echo "pytest"; return; fi
-  if [ -f "go.mod" ]; then echo "go test ./..."; return; fi
-  if [ -f "*.csproj" ] || [ -f "*.sln" ]; then echo "dotnet test"; return; fi
-  echo ""
+  printf '[verify] %s -> %s\n' "$name" "$cmd"
+  set +e
+  eval "$cmd" >"$log" 2>&1
+  local code=$?
+  set -e
+  if [[ $code -eq 0 ]]; then add_result "$name" PASS 0 "$cmd"
+  else add_result "$name" ECHEC "$code" "$cmd"; fi
+}
+
+detect_test_cmd() {
+  if [[ -f package.json ]] && grep -Eq '"test"[[:space:]]*:' package.json; then echo 'npm test'; return; fi
+  if [[ -f pytest.ini || -f pyproject.toml ]]; then echo 'pytest'; return; fi
+  if [[ -f go.mod ]]; then echo 'go test ./...'; return; fi
+  if compgen -G '*.csproj' >/dev/null || compgen -G '*.sln' >/dev/null; then echo 'dotnet test'; return; fi
 }
 
 detect_lint_cmd() {
-  if [ -f "package.json" ] && grep -q '"lint"' package.json 2>/dev/null; then
-    echo "npm run lint"; return
-  fi
-  if command -v flake8 &>/dev/null; then echo "flake8 ."; return; fi
-  if command -v golangci-lint &>/dev/null; then echo "golangci-lint run"; return; fi
-  echo ""
+  if [[ -f package.json ]] && grep -Eq '"lint"[[:space:]]*:' package.json; then echo 'npm run lint'; return; fi
+  if command -v ruff >/dev/null 2>&1; then echo 'ruff check .'; return; fi
+  if command -v flake8 >/dev/null 2>&1; then echo 'flake8 .'; return; fi
+  if command -v golangci-lint >/dev/null 2>&1; then echo 'golangci-lint run'; return; fi
 }
 
 detect_build_cmd() {
-  if [ -f "package.json" ] && grep -q '"build"' package.json 2>/dev/null; then
-    echo "npm run build"; return
-  fi
-  if [ -f "tsconfig.json" ]; then echo "tsc --noEmit"; return; fi
-  if [ -f "go.mod" ]; then echo "go build ./..."; return; fi
-  if [ -f "*.csproj" ]; then echo "dotnet build"; return; fi
-  echo ""
+  if [[ -f package.json ]] && grep -Eq '"build"[[:space:]]*:' package.json; then echo 'npm run build'; return; fi
+  if [[ -f go.mod ]]; then echo 'go build ./...'; return; fi
+  if compgen -G '*.csproj' >/dev/null || compgen -G '*.sln' >/dev/null; then echo 'dotnet build'; return; fi
 }
 
-# Parsing des arguments
-RUN_ALL=false
-RUN_TESTS=false
-RUN_LINT=false
-RUN_BUILD=false
-RUN_TYPECHECK=false
+detect_typecheck_cmd() {
+  if [[ -f package.json ]] && grep -Eq '"typecheck"[[:space:]]*:' package.json; then echo 'npm run typecheck'; return; fi
+  if [[ -f tsconfig.json ]] && command -v npx >/dev/null 2>&1; then echo 'npx tsc --noEmit'; return; fi
+  if [[ -f pyproject.toml ]] && command -v mypy >/dev/null 2>&1; then echo 'mypy .'; return; fi
+}
 
-if [ $# -eq 0 ]; then
-  RUN_ALL=true
-fi
-
-for arg in "$@"; do
-  case $arg in
-    --all)       RUN_ALL=true ;;
-    --tests)     RUN_TESTS=true ;;
-    --lint)      RUN_LINT=true ;;
-    --build)     RUN_BUILD=true ;;
-    --typecheck) RUN_TYPECHECK=true ;;
+RUN_ALL=false RUN_TESTS=false RUN_LINT=false RUN_BUILD=false RUN_TYPECHECK=false JSON=false
+if [[ $# -eq 0 ]]; then RUN_ALL=true; fi
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --all) RUN_ALL=true ;; --tests) RUN_TESTS=true ;; --lint) RUN_LINT=true ;;
+    --build) RUN_BUILD=true ;; --typecheck) RUN_TYPECHECK=true ;; --json) JSON=true ;;
+    *) echo "Unknown option: $1" >&2; exit 2 ;;
   esac
+  shift
 done
 
-# Exécution des gates
-if $RUN_ALL || $RUN_TESTS; then
-  CMD=$(detect_test_cmd)
-  if [ -n "${CMD}" ]; then
-    run_gate "tests" "${CMD}"
-  else
-    echo "  ⚠️  tests: SKIP (aucune commande détectée)"
-    SKIPPED=$((SKIPPED + 1))
-  fi
+if $RUN_ALL || $RUN_TESTS; then run_gate tests "$(detect_test_cmd)" required; fi
+if $RUN_ALL || $RUN_LINT; then run_gate lint "$(detect_lint_cmd)" optional; fi
+if $RUN_ALL || $RUN_BUILD; then run_gate build "$(detect_build_cmd)" optional; fi
+if $RUN_ALL || $RUN_TYPECHECK; then run_gate typecheck "$(detect_typecheck_cmd)" optional; fi
+
+printf '\n  ]\n}\n' >> "$REPORT"
+
+VERDICT=PASS
+if [[ $BLOQUE -gt 0 ]]; then VERDICT=BLOQUE
+elif [[ $FAIL -gt 0 ]]; then VERDICT=ECHEC
+elif [[ $SKIPPED -gt 0 ]]; then VERDICT=PARTIEL
 fi
 
-if $RUN_ALL || $RUN_LINT; then
-  CMD=$(detect_lint_cmd)
-  if [ -n "${CMD}" ]; then
-    run_gate "lint" "${CMD}"
-  else
-    echo "  ⚠️  lint: SKIP (aucune commande détectée)"
-    SKIPPED=$((SKIPPED + 1))
-  fi
-fi
+cat > "$REPORT.tmp" <<EOF
+{"verdict":"$VERDICT","pass":$PASS,"fail":$FAIL,"skipped":$SKIPPED,"blocked":$BLOQUE}
+EOF
+mv "$REPORT.tmp" "$REPORT"
 
-if $RUN_ALL || $RUN_BUILD || $RUN_TYPECHECK; then
-  CMD=$(detect_build_cmd)
-  if [ -n "${CMD}" ]; then
-    run_gate "build" "${CMD}"
-  else
-    echo "  ⚠️  build: SKIP (aucune commande détectée)"
-    SKIPPED=$((SKIPPED + 1))
-  fi
-fi
+printf '\nVERIFY REPORT — %s\n' "$TS"
+printf 'PASS=%s ECHEC=%s SKIP=%s BLOQUE=%s\n' "$PASS" "$FAIL" "$SKIPPED" "$BLOQUE"
+printf 'Report: %s\n' "$REPORT"
+printf 'VERDICT: %s\n' "$VERDICT"
 
-# Rapport final
-echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  VERIFY REPORT — ${TS}"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  ✅ PASS     : ${PASS}"
-echo "  ❌ ECHEC    : ${FAIL}"
-echo "  ⚠️  SKIP     : ${SKIPPED}"
-echo "  📁 Logs dir : ${VERIFY_DIR}/"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
-if [ "${FAIL}" -gt 0 ]; then
-  echo "  VERDICT: ECHEC"
-  exit 1
-elif [ "${SKIPPED}" -gt 0 ] && [ "${PASS}" -eq 0 ]; then
-  echo "  VERDICT: BLOQUE (aucune gate exécutée)"
-  exit 2
-elif [ "${SKIPPED}" -gt 0 ]; then
-  echo "  VERDICT: PARTIEL"
-  exit 0
-else
-  echo "  VERDICT: PASS"
-  exit 0
-fi
+case $VERDICT in
+  PASS) exit 0 ;;
+  PARTIEL) exit 3 ;;
+  ECHEC) exit 1 ;;
+  BLOQUE) exit 2 ;;
+esac
