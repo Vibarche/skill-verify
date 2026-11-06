@@ -6,11 +6,10 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import sys
 from pathlib import Path
 
 TOOL_CALL = re.compile(
-    r"(?:tool|mcp)[_ ]?call[^\n]*?([A-Za-z0-9_.-]+)\s*\(",
+    r"(?:tool|mcp)[_ ]?call[^\n]*?([A-Za-z0-9_.-]+)\s*\(([^)]*)\)",
     re.IGNORECASE,
 )
 SECRET = re.compile(
