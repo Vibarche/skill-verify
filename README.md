@@ -1,348 +1,149 @@
-<!-- Banners -->
-<p align="center">
-  <img src="assets/banner.png" alt="skill-verify — The Verification Skill Suite for AI Agents" width="100%" />
-</p>
+# skill-verify
 
-<h1 align="center">skill-verify</h1>
+An evidence-first collection of 13 skills for AI coding agents. The collection covers project development, verification, skill design and Unity workflows. Skills provide instructions; their presence alone does not prove execution, security or production readiness.
 
-<p align="center">
-  <strong>The complete skill suite for AI coding agents that prove they work, not just say they do.</strong>
-</p>
+## Development status
 
-<p align="center">
-  <a href="https://github.com/agtktID/skill-verify/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/agtktID/skill-verify.svg?style=flat-square" alt="License MIT" />
-  </a>
-  <a href="https://github.com/agtktID/skill-verify/stargazers">
-    <img src="https://img.shields.io/github/stars/agtktID/skill-verify.svg?style=flat-square&color=yellow" alt="GitHub Stars" />
-  </a>
-  <a href="https://github.com/agtktID/skill-verify/network/members">
-    <img src="https://img.shields.io/github/forks/agtktID/skill-verify.svg?style=flat-square" alt="Forks" />
-  </a>
-  <a href="https://github.com/agtktID/skill-verify/releases">
-    <img src="https://img.shields.io/github/v/release/agtktID/skill-verify.svg?style=flat-square" alt="Latest Release" />
-  </a>
-  <img src="https://img.shields.io/badge/works%20with-Claude%20Code%20%7C%20Codex%20%7C%20Cursor%20%7C%20Hermes-blueviolet?style=flat-square" alt="Works with" />
-  <img src="https://img.shields.io/badge/skills-13-blue?style=flat-square" alt="13 skills" />
-</p>
+The verification refresh is being developed on `audit/skills-refresh-2026-11-05`. Changes on that branch are not necessarily available on `main` or through the default installer. No release is announced by this documentation update.
 
-<p align="center">
-  <a href="#-quick-start">Quick Start</a> ·
-  <a href="#-project-suite-5-skills">Project Suite</a> ·
-  <a href="#-verification-suite">Verification Suite</a> ·
-  <a href="#-auto-trigger-hook">Auto-Trigger</a> ·
-  <a href="#-full-skill-catalogue">All Skills</a> ·
-  <a href="./CONTRIBUTING.md">Contribute</a>
-</p>
+Regression scripts have been added, but successful execution has not been established in this maintenance session. Known implementation and test issues are listed below. Do not merge or deploy solely on the basis of these documentation changes.
 
----
+## Installation
 
-## 🎯 What is skill-verify?
-
-**skill-verify** is an open-source collection of **13 Claude Code skills** designed to make AI agents
-**prove their work** instead of hallucinating results.
-
-Two suites, one goal — ship production-quality code:
-
-| Suite | Skills | Purpose |
-|-------|--------|---------|
-| 🏗️ **Project Suite** | `project-init` `project-build` `project-test` `project-ship` `project-review` | Build a complete project from idea to production |
-| 🛡️ **Verification Suite** | `verify` `verify-feature-end2end` `verify-context-health` `verify-unity-playmode` | Prove it works with real execution |
-| ⚙️ **Auto-Trigger Hook** | `post-task.sh` + `hooks.json` | Automatically verify after every completed task |
-
-**Core principles:**
-
-- 🚫 **Anti-hallucination** — No step is PASS without real Bash execution + exit code.
-- 📦 **Progressive disclosure** — SKILL.md stays concise; heavy scripts live in `scripts/`.
-- 🔁 **TDD-first** — Write the test before the code (Matt Pocock's methodology).
-- 🔒 **Git guardrails** — Never force-push, never deploy without a PASS verdict.
-- 📋 **Structured reports** — Every session produces `.verify/<timestamp>/report.md`.
-
----
-
-## ⚡ Quick Start
-
-### Install with 1 command
+For the default repository version:
 
 ```bash
-# Install all skills in your project
 npx skills@latest add agtktID/skill-verify
+```
 
-# Or clone and copy manually
-git clone https://github.com/agtktID/skill-verify.git
+To inspect the development branch:
+
+```bash
+git clone --branch audit/skills-refresh-2026-11-05 https://github.com/agtktID/skill-verify.git
+cd skill-verify
+```
+
+To copy an individual skill into a consuming project, run from that project's root after cloning the repository alongside it:
+
+```bash
 mkdir -p .claude/skills
-cp -r skill-verify/skills/* .claude/skills/
+cp -R ../skill-verify/skills/verify .claude/skills/
 ```
 
-### Install specific skills
+Use the installation conventions supported by your agent. Runtime compatibility, permissions and hooks must be tested separately; no cross-runtime compatibility matrix has been validated during this refresh.
+
+## Skill catalogue
+
+| Skill | Purpose |
+| --- | --- |
+| [verify](skills/verify/) | Execute verification gates and collect evidence |
+| [verify-feature-end2end](skills/verify-feature-end2end/) | Feature-level end-to-end verification |
+| [verify-context-health](skills/verify-context-health/) | Review agent context usage |
+| [verify-unity-playmode](skills/verify-unity-playmode/) | Unity test and build workflows |
+| [project-init](skills/project-init/) | Project planning and initialization |
+| [project-build](skills/project-build/) | Test-first feature implementation |
+| [project-test](skills/project-test/) | Unit, integration and end-to-end testing |
+| [project-ship](skills/project-ship/) | Release preparation and delivery |
+| [project-review](skills/project-review/) | Code and architecture review |
+| [skill-architect](skills/skill-architect/) | Design and evaluate skills |
+| [gauntlet-loop-dev](skills/gauntlet-loop-dev/) | Iterative quality workflow |
+| [indagis-feature-builder](skills/indagis-feature-builder/) | Project-specific feature workflow |
+| [unity-gamedev](skills/unity-gamedev/) | Unity development workflow |
+
+The catalogue describes intended responsibilities, not independently verified capabilities. Review a skill's instructions and scripts before granting execution permissions.
+
+## Running verification
+
+Run from the project you intend to check. Automatic detection inspects the current working directory; the runner does not change into the project root. Bash and the toolchains used by the selected gates must be available. Commands execute project code: review untrusted repositories before running them.
+
+From this repository's root:
 
 ```bash
-# Just the verification suite
-cp -r skill-verify/skills/verify .claude/skills/
-cp -r skill-verify/skills/verify-feature-end2end .claude/skills/
+# Run all four gates.
+bash skills/verify/scripts/run-verify.sh
 
-# Just the project suite
-cp -r skill-verify/skills/project-init .claude/skills/
-cp -r skill-verify/skills/project-build .claude/skills/
-cp -r skill-verify/skills/project-test .claude/skills/
-cp -r skill-verify/skills/project-ship .claude/skills/
-cp -r skill-verify/skills/project-review .claude/skills/
+# Select gates with positional arguments.
+bash skills/verify/scripts/run-verify.sh 'Feature verification' tests,lint
+
+# Or use named arguments.
+bash skills/verify/scripts/run-verify.sh --task 'Feature verification' --gates tests,build
+
+# Call the gate engine directly.
+bash skills/verify/scripts/check.sh --tests --typecheck
 ```
 
-### Install the auto-trigger hook
+For a skill copied into `.claude/skills`, use `.claude/skills/verify/scripts/run-verify.sh` instead.
+
+### Exit codes
+
+| Code | Status | Current behavior |
+| --- | --- | --- |
+| 0 | PASS | No failure, missing gate or blocked gate recorded; see limitations below |
+| 1 | ECHEC | At least one gate failed and no blocked gate was recorded |
+| 2 | BLOQUE / invalid invocation | A required test command was not detected, or arguments are invalid |
+| 3 | PARTIEL | Optional gates were skipped, with no failure or blocked gate recorded |
+| Other | Unexpected error | Not a validated result; inspect diagnostics |
+
+`run-verify.sh` preserves the engine's exit code. A nonzero result must not be interpreted as PASS. A successful selected command does not prove coverage, end-to-end correctness or permission to deploy.
+
+Tests are currently required when selected, including through `--all`. Lint, build and typecheck are treated as optional even when explicitly selected. A missing optional command produces SKIP and normally PARTIEL. This policy still needs refinement for release-blocking gates.
+
+### Evidence
+
+The engine writes command logs and a JSON summary under `.verify/<UTC timestamp>/`. The current `report.json` contains verdict and counters only: the implementation overwrites its earlier per-gate report content. It does not currently generate `report.md`.
+
+## Hooks: experimental, non-blocking
+
+Sources:
+
+- `skills/verify/hooks/post-task.sh`
+- `skills/verify/hooks/hooks.json`
+
+The configuration contains PostToolUse/Bash and Stop handlers. The script also includes a SubagentStop branch, but that event is not registered in the supplied configuration. The script intends to read `hook_event_name`, `tool_name`, `tool_response` and `stop_hook_active`, and to consume `.verify/pending-task`. It runs the shell verification runner, not the `/verify` slash command.
+
+The hook is informational: it returns 0 even if verification fails. It does not enforce release policy. `stop_hook_active` is intended as a Stop repeat guard, not a general concurrency lock.
+
+Do not activate the current hook as a trusted verification gate yet:
+
+- `IFS='|||'` splits on individual pipe characters, not the three-character delimiter. Payload fields can be misassigned, affecting trigger detection and the repeat guard.
+- The supplied configuration assumes `<project>/skills/verify/hooks/post-task.sh`; it does not match an installation under `.claude/skills` or a separately copied `.claude/hooks` script.
+- The marker is resolved from the current working directory.
+- The hook does not change directory before checking the target project.
+- The configured 60-second timeout may be insufficient for full verification.
+
+Copying `hooks.json` into `.claude/hooks/` alone is not an activation procedure. After fixing and testing these issues, merge the appropriate hooks object into the consuming project's Claude Code settings without overwriting existing settings, and configure paths for the actual installation layout.
+
+## Regression tests
 
 ```bash
-# Copy the hook to your project
-mkdir -p .claude/hooks
-cp skill-verify/skills/verify/hooks/post-task.sh .claude/hooks/
-cp skill-verify/skills/verify/hooks/hooks.json .claude/hooks/
-chmod +x .claude/hooks/post-task.sh
+bash scripts/test-check.sh
+bash scripts/test-hooks.sh
 ```
 
-The hook will **automatically run `/verify`** after every completed task, step, or feature.
+Run both scripts and inspect each exit code; running the second command alone does not establish that the first passed. The engine suite uses temporary projects and requires npm for its package-script scenarios. The hook suite intends to use a fake runner and must not execute real project gates.
 
----
+These are authored tests, not evidence of a passing test run. Current test limitations:
 
-## 🏗️ Project Suite (5 Skills)
+- `test-check.sh` expects unavailable typecheck to be BLOQUE, while the implementation treats it as optional. Its tsconfig fixture may invoke `npx tsc`, potentially causing package resolution or network access.
+- Automatic lint detection depends on installed executables, so the gate tests are not fully hermetic.
+- `test-hooks.sh` copies the hook to a temporary repository root, but the hook computes the runner path by ascending three directories. Positive trigger tests therefore do not reproduce the expected installation layout.
+- The hook suite does not yet simulate a failing runner to prove non-blocking behavior on verification failure.
 
-Build a complete project from idea to production using only these 5 skills:
+## Known engine issues still to fix
 
-```
-💡 Idea
-  ↓
-/project-init     ← Brainstorm → PRD → Issues → Scaffold → Git init
-  ↓
-/project-build    ← TDD (Red→Green→Refactor) + Gauntlet Loop
-  ↓
-/project-test     ← Unit + Integration + E2E + Coverage report
-  ↓
-/project-ship     ← CHANGELOG → Version bump → Build → Tag → Deploy → Release
-  ↓
-/project-review   ← Code quality + Architecture + Performance + Security
-  ↓
-🚀 Production
-```
+- `--json` is accepted but does not select gates or implement a distinct output mode. With only this option, zero gates can be reported as PASS.
+- A blocked gate currently takes precedence over a failed gate in the aggregate verdict. Both counters must be inspected.
+- Timestamp directories have one-second resolution and can collide.
+- Package commands are detected with text matching rather than structured package.json parsing.
+- Typecheck fallback uses `npx tsc --noEmit`; offline/local-only resolution is not enforced.
+- Tool presence and project applicability are not consistently separated during detection.
 
-### `/project-init` — Start from zero
+The next validation milestone is to repair these issues, make test fixtures deterministic, execute both suites and record actual results before proposing a merge.
 
-Turns a rough idea into a structured, ready-to-code project.
+## Contributing and security
 
-```text
-/project-init
+See [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). Never include secrets in logs or reports. Review changes before granting permissions, pushing, merging or deploying.
 
-Idea: A SaaS that helps developers track their coding streaks and share them on GitHub.
-```
+## License
 
-Deliverables: `docs/prd.md`, `docs/issues.md`, scaffolded structure, `README.md`, git init, lint configured.
-
-### `/project-build` — TDD-first feature implementation
-
-Enforces **Red → Green → Refactor** on every feature. Blocks if tests fail.
-
-```text
-/project-build
-
-Issue: #3 — Implement calculateTotal() that sums cart item prices.
-```
-
-Deliverables: `src/<feature>.<ext>`, `tests/<feature>.test.<ext>`, `.verify/<ts>/report.md`, 1 atomic commit.
-
-### `/project-test` — Full test suite
-
-Writes and runs tests at 3 levels: unit, integration, E2E.
-
-```text
-/project-test
-```
-
-Deliverables: complete test suite, coverage report in `.verify/<ts>/coverage-report.md`.
-
-### `/project-ship` — Production delivery
-
-Handles the entire release pipeline: changelog → versioning → build → tag → deploy.
-
-```text
-/project-ship v1.0.0
-```
-
-Deliverables: updated `CHANGELOG.md`, bumped version, Git tag `v1.0.0`, deployed URL.
-
-### `/project-review` — Full code review
-
-Reviews 5 dimensions: code quality, architecture, performance, security, DX.
-
-```text
-/project-review --scope all
-```
-
-Deliverables: `.verify/<ts>/review-report.md` with prioritized findings (P0/P1/P2).
-
----
-
-## 🛡️ Verification Suite
-
-### `/verify` — Persistent verification mode
-
-The core skill: runs gates (tests, build, lint, typecheck), collects logs,
-generates a structured report.
-
-```text
-/verify
-
-Task: Add calculateTotal() function.
-Constraints:
-- Write the unit test BEFORE implementation.
-- Run tests after each change.
-- If a test fails, fix and re-run until PASS.
-```
-
-### `/verify-feature-end2end` — Prove it works, then PR it
-
-Starts the app, exercises the route (Playwright or cURL), runs CI, opens the PR only if PASS.
-
-### `/verify-context-health` — Agent context audit
-
-Audits token budget, progressive disclosure compliance, unused skills, and tool schema bloat.
-
-### `/verify-unity-playmode` — Unity CI
-
-Runs EditMode + PlayMode tests and build in batchmode via Unity CLI.
-
----
-
-## ⚙️ Auto-Trigger Hook
-
-The `post-task.sh` hook **automatically triggers `/verify`** whenever Claude Code detects
-a task, step, or feature has been completed — no manual invocation needed.
-
-```
-Claude Code finishes a Bash command or Stop event
-    ↓
-post-task.sh reads the Claude Code JSON payload from stdin
-    ↓
-Detects completion keywords (done, implemented, fixed, PASS, etc.)
-    ↓
-Triggers run-verify.sh → check.sh → runs all gates
-    ↓
-Prints PASS / ECHEC / PARTIEL directly in the terminal
-```
-
-### Install the hook
-
-```bash
-mkdir -p .claude/hooks
-cp .claude/skills/verify/hooks/post-task.sh .claude/hooks/
-cp .claude/skills/verify/hooks/hooks.json .claude/hooks/
-chmod +x .claude/hooks/post-task.sh
-```
-
-### Customize the trigger keywords
-
-Edit `post-task.sh` and update `COMPLETION_KEYWORDS`:
-
-```bash
-COMPLETION_KEYWORDS="done|finished|completed|implemented|refactored|fixed|added"
-```
-
-### Manual trigger
-
-```bash
-# Run all gates
-bash .claude/skills/verify/scripts/run-verify.sh
-
-# Run specific gates
-bash .claude/skills/verify/scripts/check.sh --tests --lint
-
-# Full CI pipeline
-bash .claude/skills/verify/scripts/ci.sh
-```
-
----
-
-## 📦 Full Skill Catalogue
-
-| # | Skill | Category | Command | Works with |
-|---|-------|----------|---------|------------|
-| 1 | [`verify`](./skills/verify/) | Verification | `/verify` | Claude Code, Codex, Cursor |
-| 2 | [`verify-feature-end2end`](./skills/verify-feature-end2end/) | Verification | `/verify-feature-end2end` | Claude Code |
-| 3 | [`verify-context-health`](./skills/verify-context-health/) | Verification | `/verify-context-health` | Claude Code, Hermes |
-| 4 | [`verify-unity-playmode`](./skills/verify-unity-playmode/) | Verification | `/verify-unity-playmode` | Claude Code + Unity |
-| 5 | [`project-init`](./skills/project-init/) | Project Suite | `/project-init` | Claude Code, Codex |
-| 6 | [`project-build`](./skills/project-build/) | Project Suite | `/project-build` | Claude Code, Codex |
-| 7 | [`project-test`](./skills/project-test/) | Project Suite | `/project-test` | Claude Code, Codex |
-| 8 | [`project-ship`](./skills/project-ship/) | Project Suite | `/project-ship` | Claude Code, Codex |
-| 9 | [`project-review`](./skills/project-review/) | Project Suite | `/project-review` | Claude Code, Codex |
-| 10 | [`skill-architect`](./skills/skill-architect/) | Meta | `/skill-architect` | Claude Code |
-| 11 | [`gauntlet-loop-dev`](./skills/gauntlet-loop-dev/) | Quality | `/gauntlet-loop-dev` | Claude Code |
-| 12 | [`indagis-feature-builder`](./skills/indagis-feature-builder/) | Project | `/indagis-feature-builder` | Claude Code |
-| 13 | [`unity-gamedev`](./skills/unity-gamedev/) | Game Dev | `/unity-gamedev` | Claude Code + Unity |
-
----
-
-## 📁 Repository Structure
-
-```text
-skill-verify/
-├── skills/
-│   ├── verify/                      ← Core verification skill
-│   │   ├── SKILL.md
-│   │   ├── scripts/
-│   │   │   ├── check.sh             ← Gate runner (tests/lint/build)
-│   │   │   ├── ci.sh                ← Full CI pipeline (clean→install→lint→test→build)
-│   │   │   └── run-verify.sh        ← Manual trigger / hook entry point
-│   │   ├── hooks/
-│   │   │   ├── post-task.sh         ← Auto-trigger on task completion
-│   │   │   └── hooks.json           ← Claude Code hooks config
-│   │   ├── evals/
-│   │   └── assets/
-│   ├── verify-feature-end2end/      ← E2E pipeline (Playwright, CI, PR gate)
-│   ├── verify-context-health/       ← Context audit (tokens, progressive disclosure)
-│   ├── verify-unity-playmode/       ← Unity CLI (EditMode/PlayMode/build)
-│   ├── project-init/                ← Project bootstrapper (PRD, issues, scaffold)
-│   ├── project-build/               ← TDD implementation loop
-│   ├── project-test/                ← Full test suite (unit/integ/e2e)
-│   ├── project-ship/                ← Release pipeline (changelog→deploy→release)
-│   ├── project-review/              ← Code review (quality/arch/perf/security)
-│   ├── skill-architect/
-│   ├── gauntlet-loop-dev/
-│   ├── indagis-feature-builder/
-│   ├── unity-gamedev/
-│   └── manifest.yml                 ← Skills registry v0.3
-├── assets/
-├── .github/
-├── CHANGELOG.md
-├── CONTRIBUTING.md
-└── README.md
-```
-
----
-
-## 🔄 Verdict system
-
-Every skill produces a structured verdict:
-
-| Verdict | Meaning | Action |
-|---------|---------|--------|
-| ✅ `PASS` | All critical gates passed | Safe to commit / merge / deploy |
-| ❌ `ECHEC` | At least one critical gate failed | Fix before continuing |
-| ⚠️ `PARTIEL` | Critical gates PASS but warnings exist | Review warnings before release |
-| 🔒 `BLOQUÉ` | Cannot run (missing config) | Setup the missing commands |
-
----
-
-## 🤝 Contributing
-
-See [CONTRIBUTING.md](./CONTRIBUTING.md). PRs welcome — new skills, new scripts, new hooks.
-
-## 📜 License
-
-MIT — See [LICENSE](./LICENSE).
-
----
-
-<p align="center">
-  Made with ❤️ by <a href="https://github.com/agtktID">agtktID</a> ·
-  Inspired by <a href="https://github.com/mattpocock/skills">Matt Pocock</a>,
-  <a href="https://github.com/obra/superpowers">Superpowers</a>,
-  <a href="https://ecc.tools">ECC</a> and the Claude Code community.
-</p>
+MIT. See [LICENSE](LICENSE).
