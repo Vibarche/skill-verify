@@ -23,13 +23,16 @@
     <img src="https://img.shields.io/github/v/release/agtktID/skill-verify.svg?style=flat-square" alt="Latest Release" />
   </a>
   <img src="https://img.shields.io/badge/works%20with-Claude%20Code%20%7C%20Codex%20%7C%20Cursor%20%7C%20Hermes-blueviolet?style=flat-square" alt="Works with" />
-  <img src="https://img.shields.io/badge/skills-16-blue?style=flat-square" alt="16 skills" />
+  <img src="https://img.shields.io/badge/skills-18-blue?style=flat-square" alt="18 skills" />
+  <img src="https://img.shields.io/badge/tests-17%20passing-brightgreen?style=flat-square" alt="17 tests passing" />
 </p>
 
 <p align="center">
   <a href="#-quick-start">Quick Start</a> ·
+  <a href="#-architecture">Architecture</a> ·
   <a href="#-project-suite-5-skills">Project Suite</a> ·
   <a href="#-verification-suite">Verification Suite</a> ·
+  <a href="#-reliability-suite">Reliability Suite</a> ·
   <a href="#-ai-sprint-suite-3-skills">AI Sprint Suite</a> ·
   <a href="#-auto-trigger-hook">Auto-Trigger</a> ·
   <a href="#-full-skill-catalogue">All Skills</a> ·
@@ -40,25 +43,90 @@
 
 ## 🎯 What is skill-verify?
 
-**skill-verify** is an open-source collection of **16 Claude Code skills** designed to make AI agents
+**skill-verify** is an open-source collection of **18 Claude Code skills** designed to make AI agents
 **prove their work** instead of hallucinating results.
 
-Three suites, one goal — ship production-quality code:
+It combines project delivery, execution-based verification, agent-memory auditing, MCP hallucination detection and reusable workspace tooling.
 
 | Suite | Skills | Purpose |
 |-------|--------|---------|
 | 🏗️ **Project Suite** | `project-init` `project-build` `project-test` `project-ship` `project-review` | Build a complete project from idea to production |
 | 🛡️ **Verification Suite** | `verify` `verify-feature-end2end` `verify-context-health` `verify-unity-playmode` | Prove it works with real execution |
+| 🧠 **Reliability Suite** | `agent-memory-audit` `mcp-agent-hallucination-check` | Audit agent memory and validate claimed MCP tool usage |
 | ⚡ **AI Sprint Suite** | `connect-tool` `setup-brain` `skill-manager` | Connect tools, organize an agent brain, and manage reusable skills |
 | ⚙️ **Auto-Trigger Hook** | `post-task.sh` + `hooks.json` | Automatically verify after every completed task |
 
 **Core principles:**
 
 - 🚫 **Anti-hallucination** — No step is PASS without real Bash execution + exit code.
-- 📦 **Progressive disclosure** — SKILL.md stays concise; heavy scripts live in `scripts/`.
-- 🔁 **TDD-first** — Write the test before the code (Matt Pocock's methodology).
+- 🧠 **Evidence over claims** — Memory and MCP tool claims must be checked against local evidence.
+- 📦 **Progressive disclosure** — `SKILL.md` stays concise; heavy scripts live in `scripts/`.
+- 🔁 **TDD-first** — Write the test before the code.
 - 🔒 **Git guardrails** — Never force-push, never deploy without a PASS verdict.
 - 📋 **Structured reports** — Every session produces `.verify/<timestamp>/report.md`.
+
+---
+
+## 🧭 Architecture
+
+```mermaid
+flowchart LR
+    User([User request]) --> Agent[AI coding agent]
+
+    Agent --> Project[🏗️ Project Suite]
+    Agent --> Verify[🛡️ Verification Suite]
+    Agent --> Reliability[🧠 Reliability Suite]
+    Agent --> Sprint[⚡ AI Sprint Suite]
+
+    subgraph Project[🏗️ Project Suite]
+        direction TB
+        Init[project-init] --> Build[project-build]
+        Build --> Test[project-test]
+        Test --> Ship[project-ship]
+        Ship --> Review[project-review]
+    end
+
+    subgraph Verify[🛡️ Verification Suite]
+        direction TB
+        Core[verify] --> E2E[verify-feature-end2end]
+        Core --> Context[verify-context-health]
+        Core --> Unity[verify-unity-playmode]
+    end
+
+    subgraph Reliability[🧠 Reliability Suite]
+        direction TB
+        Memory[agent-memory-audit] --> Report1[Memory evidence report]
+        MCP[mcp-agent-hallucination-check] --> Report2[MCP contract report]
+    end
+
+    subgraph Sprint[⚡ AI Sprint Suite]
+        direction TB
+        Connect[connect-tool] --> Brain[setup-brain]
+        Brain --> Manager[skill-manager]
+    end
+
+    Project --> Gates{Verification gates}
+    Verify --> Gates
+    Reliability --> Gates
+
+    Gates -->|PASS| Ship2[✅ Commit / PR / deploy]
+    Gates -->|FAIL| Fix[❌ Fix and re-run]
+    Fix --> Agent
+
+    MCP -.reads.-> MCPConfig[(MCP config / tool contract)]
+    Memory -.reads.-> MemoryFiles[(Local memory files)]
+    Manager -.installs / updates.-> Skills[(Installed skills)]
+    Brain -.owns.-> Workspace[(AGENTS.md · projects · notes)]
+```
+
+### Responsibility boundaries
+
+| Skill | Owns | Delegates |
+|---|---|---|
+| `setup-brain` | Brain initialization, `AGENTS.md`, project hubs, notes, Git conventions | Skill installation, updates, removal and audits to `skill-manager` |
+| `skill-manager` | Skill lifecycle: install, list, update, remove, create, improve, audit | Brain/workspace initialization and documentation changes to `setup-brain` |
+| `agent-memory-audit` | Evidence-based audit of local memory claims | Execution and deployment to the verification suite |
+| `mcp-agent-hallucination-check` | Static validation of claimed MCP tool calls against a declared contract | Actual MCP tool execution — it never calls tools |
 
 ---
 
@@ -90,7 +158,11 @@ cp -r skill-verify/skills/project-test .claude/skills/
 cp -r skill-verify/skills/project-ship .claude/skills/
 cp -r skill-verify/skills/project-review .claude/skills/
 
-# Just the AI Sprint suite
+# Reliability suite
+cp -r skill-verify/skills/agent-memory-audit .agents/skills/
+cp -r skill-verify/skills/mcp-agent-hallucination-check .agents/skills/
+
+# AI Sprint suite
 cp -r skill-verify/skills/connect-tool .agents/skills/
 cp -r skill-verify/skills/setup-brain .agents/skills/
 cp -r skill-verify/skills/skill-manager .agents/skills/
@@ -99,35 +171,28 @@ cp -r skill-verify/skills/skill-manager .agents/skills/
 ### Install the auto-trigger hook
 
 ```bash
-# Copy the hook to your project
 mkdir -p .claude/hooks
 cp skill-verify/skills/verify/hooks/post-task.sh .claude/hooks/
 cp skill-verify/skills/verify/hooks/hooks.json .claude/hooks/
 chmod +x .claude/hooks/post-task.sh
 ```
 
-The hook will **automatically run `/verify`** after every completed task, step, or feature.
+The hook automatically runs `/verify` after every completed task, step, or feature.
 
 ---
 
 ## 🏗️ Project Suite (5 Skills)
 
-Build a complete project from idea to production using only these 5 skills:
+Build a complete project from idea to production:
 
-```text
-💡 Idea
-  ↓
-/project-init     ← Brainstorm → PRD → Issues → Scaffold → Git init
-  ↓
-/project-build    ← TDD (Red→Green→Refactor) + Gauntlet Loop
-  ↓
-/project-test     ← Unit + Integration + E2E + Coverage report
-  ↓
-/project-ship     ← CHANGELOG → Version bump → Build → Tag → Deploy → Release
-  ↓
-/project-review   ← Code quality + Architecture + Performance + Security
-  ↓
-🚀 Production
+```mermaid
+flowchart TD
+    A[💡 Idea] --> B[/project-init<br>PRD · issues · scaffold · Git/]
+    B --> C[/project-build<br>TDD: red → green → refactor/]
+    C --> D[/project-test<br>unit · integration · E2E/]
+    D --> E[/project-ship<br>changelog · version · build · release/]
+    E --> F[/project-review<br>quality · architecture · security/]
+    F --> G[🚀 Production]
 ```
 
 ### `/project-init` — Start from zero
@@ -140,11 +205,11 @@ Turns a rough idea into a structured, ready-to-code project.
 Idea: A SaaS that helps developers track their coding streaks and share them on GitHub.
 ```
 
-Deliverables: `docs/prd.md`, `docs/issues.md`, scaffolded structure, `README.md`, git init, lint configured.
+Deliverables: `docs/prd.md`, `docs/issues.md`, scaffolded structure, `README.md`, Git initialization and lint configuration.
 
 ### `/project-build` — TDD-first feature implementation
 
-Enforces **Red → Green → Refactor** on every feature. Blocks if tests fail.
+Enforces **Red → Green → Refactor** on every feature and blocks if tests fail.
 
 ```text
 /project-build
@@ -152,37 +217,37 @@ Enforces **Red → Green → Refactor** on every feature. Blocks if tests fail.
 Issue: #3 — Implement calculateTotal() that sums cart item prices.
 ```
 
-Deliverables: `src/<feature>.<ext>`, `tests/<feature>.test.<ext>`, `.verify/<ts>/report.md`, 1 atomic commit.
+Deliverables: implementation, tests, `.verify/<ts>/report.md`, and one atomic commit.
 
 ### `/project-test` — Full test suite
 
-Writes and runs tests at 3 levels: unit, integration, E2E.
+Writes and runs tests at three levels: unit, integration and end-to-end.
 
 ```text
 /project-test
 ```
 
-Deliverables: complete test suite, coverage report in `.verify/<ts>/coverage-report.md`.
+Deliverables: complete test suite and coverage report in `.verify/<ts>/coverage-report.md`.
 
 ### `/project-ship` — Production delivery
 
-Handles the entire release pipeline: changelog → versioning → build → tag → deploy.
+Handles the release pipeline: changelog → versioning → build → tag → deploy.
 
 ```text
 /project-ship v1.0.0
 ```
 
-Deliverables: updated `CHANGELOG.md`, bumped version, Git tag `v1.0.0`, deployed URL.
+Deliverables: updated `CHANGELOG.md`, bumped version, Git tag and deployed URL.
 
 ### `/project-review` — Full code review
 
-Reviews 5 dimensions: code quality, architecture, performance, security, DX.
+Reviews code quality, architecture, performance, security and developer experience.
 
 ```text
 /project-review --scope all
 ```
 
-Deliverables: `.verify/<ts>/review-report.md` with prioritized findings (P0/P1/P2).
+Deliverables: `.verify/<ts>/review-report.md` with prioritized P0/P1/P2 findings.
 
 ---
 
@@ -190,8 +255,7 @@ Deliverables: `.verify/<ts>/review-report.md` with prioritized findings (P0/P1/P
 
 ### `/verify` — Persistent verification mode
 
-The core skill: runs gates (tests, build, lint, typecheck), collects logs,
-generates a structured report.
+The core skill runs gates for tests, build, lint and typecheck, collects logs and generates a structured report.
 
 ```text
 /verify
@@ -205,15 +269,63 @@ Constraints:
 
 ### `/verify-feature-end2end` — Prove it works, then PR it
 
-Starts the app, exercises the route (Playwright or cURL), runs CI, opens the PR only if PASS.
+Starts the app, exercises the route with Playwright or cURL, runs CI, and opens a PR only on PASS.
 
 ### `/verify-context-health` — Agent context audit
 
-Audits token budget, progressive disclosure compliance, unused skills, and tool schema bloat.
+Audits token budget, progressive-disclosure compliance, unused skills and tool-schema bloat.
 
 ### `/verify-unity-playmode` — Unity CI
 
-Runs EditMode + PlayMode tests and build in batchmode via Unity CLI.
+Runs EditMode and PlayMode tests, then builds in batchmode through the Unity CLI.
+
+---
+
+## 🧠 Reliability Suite
+
+The Reliability Suite reduces two common agent failure modes: unsupported memory claims and invented MCP tool usage.
+
+### `/agent-memory-audit` — Audit agent memory
+
+Checks that memory claims are supported by local memory files, detects broken links and missing status metadata, and produces an evidence-based report.
+
+```bash
+python3 skills/agent-memory-audit/scripts/agent_memory_audit.py <memory-file>
+```
+
+Use it before relying on an agent’s stored preferences, project context or past decisions.
+
+### `/mcp-agent-hallucination-check` — Validate MCP claims
+
+Performs a **read-only** review of transcripts or workflows for invented MCP tools, unsafe calls and exposed credentials. It compares claimed tool calls with a separately supplied MCP configuration.
+
+```bash
+python3 skills/mcp-agent-hallucination-check/scripts/mcp_contract_check.py \
+  transcript.md \
+  --config mcp-config.json \
+  --json
+```
+
+It never executes MCP tools, modifies configuration, or makes network calls.
+
+```mermaid
+flowchart LR
+    T[Transcript / workflow] --> C[mcp-agent-hallucination-check]
+    M[(MCP config<br>declared tools)] --> C
+    C --> F{Findings}
+    F -->|Invented tool| X[❌ Block / correct]
+    F -->|Unsafe destructive call| Y[❌ Require confirmation]
+    F -->|Exposed secret| Z[❌ Remove credential]
+    F -->|No mismatch| P[✅ Claims consistent]
+```
+
+### Validate the repository
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+The suite includes 17 structural and behavioral tests covering skill metadata, secret scanning, Python CLI behavior, memory auditing, MCP hallucination checks and local skill installation/removal.
 
 ---
 
@@ -228,8 +340,6 @@ Connects an approved tool through its official CLI or generates a minimal Python
 ```text
 /connect-tool notion
 ```
-
-Use it for Notion, Stripe, ClickFunnels, or any service with an official CLI or documented API.
 
 ### `/setup-brain` — Organize work by project
 
@@ -253,31 +363,22 @@ Installs, lists, updates, removes, creates, improves and audits Agent Skills for
 
 Installed skills retain a `.source` file for traceable updates. Removal moves skills to a timestamped trash directory instead of deleting them.
 
-### Validate the AI Sprint Suite
-
-```bash
-python3 -m unittest discover -s tests -v
-```
-
-The suite includes 11 structural and behavioral tests covering skill metadata, secret scanning, Python CLI behavior, and local skill installation/removal.
-
 ---
 
 ## ⚙️ Auto-Trigger Hook
 
-The `post-task.sh` hook **automatically triggers `/verify`** whenever Claude Code detects
-a task, step, or feature has been completed — no manual invocation needed.
+The `post-task.sh` hook automatically triggers `/verify` when Claude Code detects a completed task, step, or feature.
 
-```text
-Claude Code finishes a Bash command or Stop event
-    ↓
-post-task.sh reads the Claude Code JSON payload from stdin
-    ↓
-Detects completion keywords (done, implemented, fixed, PASS, etc.)
-    ↓
-Triggers run-verify.sh → check.sh → runs all gates
-    ↓
-Prints PASS / ECHEC / PARTIEL directly in the terminal
+```mermaid
+flowchart LR
+    A[Claude Code completes a task] --> B[post-task.sh]
+    B --> C[Detect completion keywords]
+    C --> D[run-verify.sh]
+    D --> E[check.sh<br>tests · lint · build]
+    E --> F{Verdict}
+    F -->|PASS| G[✅ Continue]
+    F -->|ECHEC| H[❌ Fix]
+    F -->|PARTIEL| I[⚠️ Review warnings]
 ```
 
 ### Install the hook
@@ -289,7 +390,7 @@ cp .claude/skills/verify/hooks/hooks.json .claude/hooks/
 chmod +x .claude/hooks/post-task.sh
 ```
 
-### Customize the trigger keywords
+### Customize trigger keywords
 
 Edit `post-task.sh` and update `COMPLETION_KEYWORDS`:
 
@@ -300,13 +401,8 @@ COMPLETION_KEYWORDS="done|finished|completed|implemented|refactored|fixed|added"
 ### Manual trigger
 
 ```bash
-# Run all gates
 bash .claude/skills/verify/scripts/run-verify.sh
-
-# Run specific gates
 bash .claude/skills/verify/scripts/check.sh --tests --lint
-
-# Full CI pipeline
 bash .claude/skills/verify/scripts/ci.sh
 ```
 
@@ -325,13 +421,15 @@ bash .claude/skills/verify/scripts/ci.sh
 | 7 | [`project-test`](./skills/project-test/) | Project Suite | `/project-test` | Claude Code, Codex |
 | 8 | [`project-ship`](./skills/project-ship/) | Project Suite | `/project-ship` | Claude Code, Codex |
 | 9 | [`project-review`](./skills/project-review/) | Project Suite | `/project-review` | Claude Code, Codex |
-| 10 | [`skill-architect`](./skills/skill-architect/) | Meta | `/skill-architect` | Claude Code |
-| 11 | [`gauntlet-loop-dev`](./skills/gauntlet-loop-dev/) | Quality | `/gauntlet-loop-dev` | Claude Code |
-| 12 | [`indagis-feature-builder`](./skills/indagis-feature-builder/) | Project | `/indagis-feature-builder` | Claude Code |
-| 13 | [`unity-gamedev`](./skills/unity-gamedev/) | Game Dev | `/unity-gamedev` | Claude Code + Unity |
-| 14 | [`connect-tool`](./skills/connect-tool/) | AI Sprint | `/connect-tool` | Claude Code, Codex |
-| 15 | [`setup-brain`](./skills/setup-brain/) | AI Sprint | `/setup-brain` | Claude Code, Codex |
-| 16 | [`skill-manager`](./skills/skill-manager/) | AI Sprint | `/skill-manager` | Claude Code, Codex |
+| 10 | [`agent-memory-audit`](./skills/agent-memory-audit/) | Reliability | `/agent-memory-audit` | Claude Code, Codex |
+| 11 | [`mcp-agent-hallucination-check`](./skills/mcp-agent-hallucination-check/) | Reliability | `/mcp-agent-hallucination-check` | Claude Code, Codex |
+| 12 | [`skill-architect`](./skills/skill-architect/) | Meta | `/skill-architect` | Claude Code |
+| 13 | [`gauntlet-loop-dev`](./skills/gauntlet-loop-dev/) | Quality | `/gauntlet-loop-dev` | Claude Code |
+| 14 | [`indagis-feature-builder`](./skills/indagis-feature-builder/) | Project | `/indagis-feature-builder` | Claude Code |
+| 15 | [`unity-gamedev`](./skills/unity-gamedev/) | Game Dev | `/unity-gamedev` | Claude Code + Unity |
+| 16 | [`connect-tool`](./skills/connect-tool/) | AI Sprint | `/connect-tool` | Claude Code, Codex |
+| 17 | [`setup-brain`](./skills/setup-brain/) | AI Sprint | `/setup-brain` | Claude Code, Codex |
+| 18 | [`skill-manager`](./skills/skill-manager/) | AI Sprint | `/skill-manager` | Claude Code, Codex |
 
 ---
 
@@ -341,38 +439,26 @@ bash .claude/skills/verify/scripts/ci.sh
 skill-verify/
 ├── skills/
 │   ├── verify/                      ← Core verification skill
-│   │   ├── SKILL.md
-│   │   ├── scripts/
-│   │   │   ├── check.sh             ← Gate runner (tests/lint/build)
-│   │   │   ├── ci.sh                ← Full CI pipeline (clean→install→lint→test→build)
-│   │   │   └── run-verify.sh        ← Manual trigger / hook entry point
-│   │   ├── hooks/
-│   │   │   ├── post-task.sh         ← Auto-trigger on task completion
-│   │   │   └── hooks.json           ← Claude Code hooks config
-│   │   ├── evals/
-│   │   └── assets/
-│   ├── verify-feature-end2end/      ← E2E pipeline (Playwright, CI, PR gate)
-│   ├── verify-context-health/       ← Context audit (tokens, progressive disclosure)
-│   ├── verify-unity-playmode/       ← Unity CLI (EditMode/PlayMode/build)
-│   ├── project-init/                ← Project bootstrapper (PRD, issues, scaffold)
+│   ├── verify-feature-end2end/      ← E2E pipeline and PR gate
+│   ├── verify-context-health/       ← Context and token audit
+│   ├── verify-unity-playmode/       ← Unity EditMode / PlayMode / build
+│   ├── project-init/                ← PRD, issues, scaffold, Git
 │   ├── project-build/               ← TDD implementation loop
-│   ├── project-test/                ← Full test suite (unit/integ/e2e)
-│   ├── project-ship/                ← Release pipeline (changelog→deploy→release)
-│   ├── project-review/              ← Code review (quality/arch/perf/security)
-│   ├── skill-architect/
-│   ├── gauntlet-loop-dev/
-│   ├── indagis-feature-builder/
-│   ├── unity-gamedev/
-│   ├── connect-tool/                ← Connect external services and generate API CLIs
-│   ├── setup-brain/                 ← Initialize and maintain an agent brain
-│   ├── skill-manager/               ← Install, update, create and audit skills
-│   └── manifest.yml                 ← Skills registry v0.3
-├── tests/
-│   ├── test_skill_structure.py      ← Skill metadata and security validation
-│   ├── test_scripts.py              ← Python CLI and skill-manager behavior
-│   └── scenarios.md                 ← Manual validation scenarios
+│   ├── project-test/                ← Unit, integration and E2E tests
+│   ├── project-ship/                ← Release pipeline
+│   ├── project-review/              ← Code and architecture review
+│   ├── agent-memory-audit/          ← Evidence-based memory audit
+│   ├── mcp-agent-hallucination-check/ ← Read-only MCP contract checker
+│   ├── skill-architect/             ← Skill design guidance
+│   ├── gauntlet-loop-dev/           ← Quality iteration loop
+│   ├── indagis-feature-builder/     ← Feature builder
+│   ├── unity-gamedev/               ← Unity game development
+│   ├── connect-tool/                ← External service connections
+│   ├── setup-brain/                 ← Agent brain and workspace setup
+│   ├── skill-manager/               ← Skill lifecycle management
+│   └── manifest.yml                 ← Skills registry
+├── tests/                           ← 17 automated tests
 ├── docs/
-│   └── ai-sprint-skills-v2.md       ← AI Sprint improvements and compatibility
 ├── assets/
 ├── .github/
 ├── CHANGELOG.md
@@ -384,20 +470,18 @@ skill-verify/
 
 ## 🔄 Verdict system
 
-Every skill produces a structured verdict:
-
 | Verdict | Meaning | Action |
 |---------|---------|--------|
-| ✅ `PASS` | All critical gates passed | Safe to commit / merge / deploy |
+| ✅ `PASS` | All critical gates passed | Safe to commit, merge or deploy |
 | ❌ `ECHEC` | At least one critical gate failed | Fix before continuing |
-| ⚠️ `PARTIEL` | Critical gates PASS but warnings exist | Review warnings before release |
-| 🔒 `BLOQUÉ` | Cannot run (missing config) | Setup the missing commands |
+| ⚠️ `PARTIEL` | Critical gates pass but warnings exist | Review warnings before release |
+| 🔒 `BLOQUÉ` | Cannot run because configuration is missing | Set up the missing commands |
 
 ---
 
 ## 🤝 Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md). PRs welcome — new skills, new scripts, new hooks.
+See [CONTRIBUTING.md](./CONTRIBUTING.md). PRs are welcome for new skills, scripts, hooks, tests and documentation.
 
 ## 📜 License
 
