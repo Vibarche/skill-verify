@@ -23,13 +23,14 @@
     <img src="https://img.shields.io/github/v/release/agtktID/skill-verify.svg?style=flat-square" alt="Latest Release" />
   </a>
   <img src="https://img.shields.io/badge/works%20with-Claude%20Code%20%7C%20Codex%20%7C%20Cursor%20%7C%20Hermes-blueviolet?style=flat-square" alt="Works with" />
-  <img src="https://img.shields.io/badge/skills-13-blue?style=flat-square" alt="13 skills" />
+  <img src="https://img.shields.io/badge/skills-16-blue?style=flat-square" alt="16 skills" />
 </p>
 
 <p align="center">
   <a href="#-quick-start">Quick Start</a> ·
   <a href="#-project-suite-5-skills">Project Suite</a> ·
   <a href="#-verification-suite">Verification Suite</a> ·
+  <a href="#-ai-sprint-suite-3-skills">AI Sprint Suite</a> ·
   <a href="#-auto-trigger-hook">Auto-Trigger</a> ·
   <a href="#-full-skill-catalogue">All Skills</a> ·
   <a href="./CONTRIBUTING.md">Contribute</a>
@@ -39,15 +40,16 @@
 
 ## 🎯 What is skill-verify?
 
-**skill-verify** is an open-source collection of **13 Claude Code skills** designed to make AI agents
+**skill-verify** is an open-source collection of **16 Claude Code skills** designed to make AI agents
 **prove their work** instead of hallucinating results.
 
-Two suites, one goal — ship production-quality code:
+Three suites, one goal — ship production-quality code:
 
 | Suite | Skills | Purpose |
 |-------|--------|---------|
 | 🏗️ **Project Suite** | `project-init` `project-build` `project-test` `project-ship` `project-review` | Build a complete project from idea to production |
 | 🛡️ **Verification Suite** | `verify` `verify-feature-end2end` `verify-context-health` `verify-unity-playmode` | Prove it works with real execution |
+| ⚡ **AI Sprint Suite** | `connect-tool` `setup-brain` `skill-manager` | Connect tools, organize an agent brain, and manage reusable skills |
 | ⚙️ **Auto-Trigger Hook** | `post-task.sh` + `hooks.json` | Automatically verify after every completed task |
 
 **Core principles:**
@@ -87,6 +89,11 @@ cp -r skill-verify/skills/project-build .claude/skills/
 cp -r skill-verify/skills/project-test .claude/skills/
 cp -r skill-verify/skills/project-ship .claude/skills/
 cp -r skill-verify/skills/project-review .claude/skills/
+
+# Just the AI Sprint suite
+cp -r skill-verify/skills/connect-tool .agents/skills/
+cp -r skill-verify/skills/setup-brain .agents/skills/
+cp -r skill-verify/skills/skill-manager .agents/skills/
 ```
 
 ### Install the auto-trigger hook
@@ -107,7 +114,7 @@ The hook will **automatically run `/verify`** after every completed task, step, 
 
 Build a complete project from idea to production using only these 5 skills:
 
-```
+```text
 💡 Idea
   ↓
 /project-init     ← Brainstorm → PRD → Issues → Scaffold → Git init
@@ -210,12 +217,58 @@ Runs EditMode + PlayMode tests and build in batchmode via Unity CLI.
 
 ---
 
+## ⚡ AI Sprint Suite (3 Skills)
+
+The AI Sprint Suite manages the agent environment itself: connect external services, organize work by project, and install or maintain reusable skills.
+
+### `/connect-tool` — Connect an external service
+
+Connects an approved tool through its official CLI or generates a minimal Python API CLI. It validates the connection with read-only operations and keeps credentials local.
+
+```text
+/connect-tool notion
+```
+
+Use it for Notion, Stripe, ClickFunnels, or any service with an official CLI or documented API.
+
+### `/setup-brain` — Organize work by project
+
+Creates or extends a personal agent brain: one `AGENTS.md`, project hubs, notes, working-style rules and Git history.
+
+```text
+/setup-brain ~/brain
+```
+
+It interviews the user, preserves existing content, and creates only the structure needed.
+
+### `/skill-manager` — Manage Agent Skills
+
+Installs, lists, updates, removes, creates, improves and audits Agent Skills for Claude Code and Codex.
+
+```text
+/skill-manager install owner/repo
+/skill-manager list
+/skill-manager create
+```
+
+Installed skills retain a `.source` file for traceable updates. Removal moves skills to a timestamped trash directory instead of deleting them.
+
+### Validate the AI Sprint Suite
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+The suite includes 11 structural and behavioral tests covering skill metadata, secret scanning, Python CLI behavior, and local skill installation/removal.
+
+---
+
 ## ⚙️ Auto-Trigger Hook
 
 The `post-task.sh` hook **automatically triggers `/verify`** whenever Claude Code detects
 a task, step, or feature has been completed — no manual invocation needed.
 
-```
+```text
 Claude Code finishes a Bash command or Stop event
     ↓
 post-task.sh reads the Claude Code JSON payload from stdin
@@ -276,6 +329,9 @@ bash .claude/skills/verify/scripts/ci.sh
 | 11 | [`gauntlet-loop-dev`](./skills/gauntlet-loop-dev/) | Quality | `/gauntlet-loop-dev` | Claude Code |
 | 12 | [`indagis-feature-builder`](./skills/indagis-feature-builder/) | Project | `/indagis-feature-builder` | Claude Code |
 | 13 | [`unity-gamedev`](./skills/unity-gamedev/) | Game Dev | `/unity-gamedev` | Claude Code + Unity |
+| 14 | [`connect-tool`](./skills/connect-tool/) | AI Sprint | `/connect-tool` | Claude Code, Codex |
+| 15 | [`setup-brain`](./skills/setup-brain/) | AI Sprint | `/setup-brain` | Claude Code, Codex |
+| 16 | [`skill-manager`](./skills/skill-manager/) | AI Sprint | `/skill-manager` | Claude Code, Codex |
 
 ---
 
@@ -307,7 +363,16 @@ skill-verify/
 │   ├── gauntlet-loop-dev/
 │   ├── indagis-feature-builder/
 │   ├── unity-gamedev/
+│   ├── connect-tool/                ← Connect external services and generate API CLIs
+│   ├── setup-brain/                 ← Initialize and maintain an agent brain
+│   ├── skill-manager/               ← Install, update, create and audit skills
 │   └── manifest.yml                 ← Skills registry v0.3
+├── tests/
+│   ├── test_skill_structure.py      ← Skill metadata and security validation
+│   ├── test_scripts.py              ← Python CLI and skill-manager behavior
+│   └── scenarios.md                 ← Manual validation scenarios
+├── docs/
+│   └── ai-sprint-skills-v2.md       ← AI Sprint improvements and compatibility
 ├── assets/
 ├── .github/
 ├── CHANGELOG.md
