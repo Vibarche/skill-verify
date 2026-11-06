@@ -495,3 +495,5 @@ MIT — See [LICENSE](./LICENSE).
   <a href="https://github.com/obra/superpowers">Superpowers</a>,
   <a href="https://ecc.tools">ECC</a> and the Claude Code community.
 </p>
+
+<!-- ci: rerun 2026-11-06 -->
