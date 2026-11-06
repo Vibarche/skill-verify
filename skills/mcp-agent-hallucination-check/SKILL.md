@@ -1,12 +1,12 @@
 ---
 name: mcp-agent-hallucination-check
 description: Check an MCP agent workflow for invented tools, invalid arguments, fabricated results, memory hallucinations and unsafe execution. Use when reviewing an MCP integration, debugging an agent that invents tool output, or validating a skill before automation.
-argument-hint: "[workflow file, transcript, or MCP config path]"
+argument-hint: "[workflow file, transcript, or MCP config path] [--config mcp-config.json]"
 license: MIT
 compatibility: Requires Python 3.10+; performs no network calls.
 metadata:
   source: https://arxiv.org/abs/2611.07689
-  version: "1.0.0"
+  version: "1.0.1"
 ---
 
 Check whether an agent workflow uses MCP tools truthfully. This skill is read-only: it never calls an MCP server, executes a tool, or modifies configuration.
@@ -15,11 +15,11 @@ Check whether an agent workflow uses MCP tools truthfully. This skill is read-on
 2. Run the local contract checker:
 
 ```bash
-python3 scripts/mcp_contract_check.py <input-file>
+python3 scripts/mcp_contract_check.py <input-file> --config <mcp-config.json>
 ```
 
 3. Extract every claimed MCP tool call, including server, tool, arguments and claimed result.
-4. Compare each claim with the available configuration or declared tool contract.
+4. Compare each claim with the tools declared in the separate MCP configuration.
 5. Flag these hallucination classes:
 
 - Invented server or tool name.

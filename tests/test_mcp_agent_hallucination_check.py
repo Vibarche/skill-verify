@@ -33,10 +33,11 @@ class McpHallucinationCheckTests(unittest.TestCase):
             )
 
             result = subprocess.run(
-                ["python3", str(SCRIPT), str(transcript), "--json"],
+                ["python3", str(SCRIPT), str(transcript), "--config", str(config), "--json"],
                 capture_output=True,
                 text=True,
             )
+            self.assertEqual(result.returncode, 0, result.stderr)
             report = json.loads(result.stdout)
             types = {item["type"] for item in report["findings"]}
             self.assertIn("invented-tool", types)

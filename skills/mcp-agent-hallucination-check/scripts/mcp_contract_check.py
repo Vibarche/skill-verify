@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 
 TOOL_CALL = re.compile(
-    r"(?:tool|mcp)[_ ]?call[^\n]*?([A-Za-z0-9_.-]+)\s*\(([^)]*)\)",
+    r"(?:tool|mcp)[_ ]?call[^\n]*?([A-Za-z0-9_.-]+)\s*\(",
     re.IGNORECASE,
 )
 SECRET = re.compile(
@@ -19,15 +19,11 @@ SECRET = re.compile(
 DESTRUCTIVE = re.compile(r"\b(delete|remove|drop|publish|send|pay|charge)\b", re.IGNORECASE)
 
 
-def load_json_or_text(path: Path) -> dict:
-    text = path.read_text(encoding="utf-8", errors="replace")
-    if path.suffix.lower() == ".json":
-        try:
-            parsed = json.loads(text)
-            return {"text": json.dumps(parsed, ensure_ascii=False), "config": parsed}
-        except json.JSONDecodeError:
-            return {"text": text, "config": {}}
-    return {"text": text, "config": {}}
+def load_json(path: Path) -> dict:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise SystemExit(f"Error: cannot read MCP config {path}: {exc}")
 
 
 def declared_tools(config: dict) -> set[str]:
@@ -47,10 +43,10 @@ def declared_tools(config: dict) -> set[str]:
     return tools
 
 
-def check(path: Path) -> dict:
-    data = load_json_or_text(path)
-    text = data["text"]
-    available = declared_tools(data["config"])
+def check(path: Path, config_path: Path | None) -> dict:
+    text = path.read_text(encoding="utf-8", errors="replace")
+    config = load_json(config_path) if config_path else {}
+    available = declared_tools(config)
     findings = []
 
     calls = []
@@ -89,12 +85,21 @@ def check(path: Path) -> dict:
             "evidence": "no MCP/tool call pattern detected",
         })
 
+    if not available:
+        findings.append({
+            "severity": "warning",
+            "type": "missing-tool-contract",
+            "tool": None,
+            "evidence": "no MCP configuration or declared tools supplied",
+        })
+
     summary = {}
     for item in findings:
         summary[item["severity"]] = summary.get(item["severity"], 0) + 1
 
     return {
         "input": str(path),
+        "config": str(config_path) if config_path else None,
         "declared_tools": sorted(available),
         "claimed_calls": calls,
         "findings": findings,
@@ -105,6 +110,7 @@ def check(path: Path) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Check claimed MCP tool calls")
     parser.add_argument("input", help="Transcript, workflow, skill or MCP config file")
+    parser.add_argument("--config", help="MCP configuration JSON declaring available tools")
     parser.add_argument("--json", action="store_true", help="Output raw JSON")
     args = parser.parse_args()
 
@@ -112,12 +118,17 @@ def main() -> None:
     if not path.is_file():
         parser.error(f"not a file: {path}")
 
-    report = check(path)
+    config_path = Path(args.config).expanduser().resolve() if args.config else None
+    if config_path and not config_path.is_file():
+        parser.error(f"not a file: {config_path}")
+
+    report = check(path, config_path)
     if args.json:
         print(json.dumps(report, indent=2, ensure_ascii=False))
         return
 
     print(f"Input: {report['input']}")
+    print(f"Config: {report['config'] or 'none'}")
     print(f"Declared tools: {', '.join(report['declared_tools']) or 'none'}")
     print(f"Claimed calls: {len(report['claimed_calls'])}")
     print(f"Findings: {report['summary'] or 'none'}")
