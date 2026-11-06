@@ -45,12 +45,9 @@ cat > "$TMP/partial/package.json" <<'EOF'
 EOF
 expect 'missing optional gate is partial' 3 "$(run_check "$TMP/partial" --all)"
 
-# Typecheck is optional: an unavailable command is PARTIEL, not a hard failure.
-mkdir -p "$TMP/types"
-cat > "$TMP/types/tsconfig.json" <<'EOF'
-{"compilerOptions":{"noEmit":true}}
-EOF
-expect 'unavailable typecheck is partial' 3 "$(run_check "$TMP/types" --typecheck)"
+# Typecheck is optional: with no detectable typecheck command, it is PARTIEL.
+mkdir -p "$TMP/no-typecheck"
+expect 'unavailable typecheck is partial' 3 "$(run_check "$TMP/no-typecheck" --typecheck)"
 
 if [[ $FAILED -gt 0 ]]; then
   printf '%s regression test(s) failed\n' "$FAILED" >&2
