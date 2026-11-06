@@ -3,9 +3,11 @@
 from pathlib import Path
 import re
 import unittest
+import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILLS = ROOT / "skills"
+MANIFEST = SKILLS / "manifest.yml"
 
 EXPECTED = {
     "connect-tool": ["SKILL.md", "scripts/cli_template.py"],
@@ -53,6 +55,32 @@ class SkillStructureTests(unittest.TestCase):
                 content = path.read_text(encoding="utf-8", errors="ignore")
                 for pattern in patterns:
                     self.assertIsNone(re.search(pattern, content), f"possible secret in {path}")
+
+    def test_every_skill_directory_is_in_manifest(self):
+        manifest = yaml.safe_load(MANIFEST.read_text(encoding="utf-8"))
+        registered = {item["name"] for item in manifest["skills"]}
+        for skill_dir in SKILLS.iterdir():
+            if not skill_dir.is_dir() or not (skill_dir / "SKILL.md").is_file():
+                continue
+            self.assertIn(
+                skill_dir.name,
+                registered,
+                f"skill directory missing from manifest: {skill_dir.name}",
+            )
+
+    def test_every_manifest_path_exists_with_skill_md(self):
+        manifest = yaml.safe_load(MANIFEST.read_text(encoding="utf-8"))
+        for item in manifest["skills"]:
+            path = ROOT / item["path"]
+            self.assertTrue(path.is_dir(), f"manifest path missing: {path}")
+            self.assertTrue(
+                (path / "SKILL.md").is_file(),
+                f"SKILL.md missing for manifest skill: {item['name']}",
+            )
+
+    def test_manifest_contains_all_eighteen_skills(self):
+        manifest = yaml.safe_load(MANIFEST.read_text(encoding="utf-8"))
+        self.assertEqual(len(manifest["skills"]), 18)
 
 
 if __name__ == "__main__":
