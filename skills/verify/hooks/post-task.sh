@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # Claude Code hook: run verification after a completed task.
 # This hook is intentionally non-blocking: it always exits 0.
-# Install it through the Claude Code hooks configuration, not merely by copying it.
 set -uo pipefail
 
 INPUT=$(cat)
@@ -16,7 +15,7 @@ import json, sys
 try:
     data = json.load(sys.stdin)
 except Exception:
-    print("|||")
+    print("\n\n\n")
     sys.exit(0)
 
 event = str(data.get("hook_event_name") or "")
@@ -26,14 +25,19 @@ if response is None:
     response = data.get("tool_output") or data.get("output") or ""
 if not isinstance(response, str):
     response = json.dumps(response, ensure_ascii=False)
-stop_active = bool(data.get("stop_hook_active") or False)
-print(f"{event}|||{tool}|||{stop_active}|||{response}")
+stop_active = "true" if data.get("stop_hook_active") else "false"
+# One field per line; response is last and may contain any characters.
+sys.stdout.write(f"{event}\n{tool}\n{stop_active}\n{response}\n")
 PY
 
-PARSED=$(printf '%s' "$INPUT" | python3 -c "$PARSE" 2>/dev/null || printf '|||')
-IFS='|||' read -r EVENT TOOL STOP_ACTIVE RESPONSE <<< "$PARSED"
+PARSED=$(printf '%s' "$INPUT" | python3 -c "$PARSE" 2>/dev/null || printf '\n\n\n')
+mapfile -t FIELDS <<< "$PARSED"
+EVENT="${FIELDS[0]:-}"
+TOOL="${FIELDS[1]:-}"
+STOP_ACTIVE="${FIELDS[2]:-false}"
+RESPONSE="${FIELDS[3]:-}"
 
-if [[ $STOP_ACTIVE == True ]]; then
+if [[ $STOP_ACTIVE == true ]]; then
   printf '[verify-hook] Stop verification already active; avoiding repeat run.\n' >&2
   exit 0
 fi
@@ -60,11 +64,23 @@ if [[ $SHOULD_VERIFY != true ]]; then
 fi
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)" || exit 0
-PROJECT_ROOT="$(cd -- "$SCRIPT_DIR/../../.." && pwd)" || exit 0
-RUNNER="$PROJECT_ROOT/skills/verify/scripts/run-verify.sh"
+CANDIDATES=(
+  "$SCRIPT_DIR/../scripts/run-verify.sh"
+  "$SCRIPT_DIR/../../../skills/verify/scripts/run-verify.sh"
+  "$PWD/skills/verify/scripts/run-verify.sh"
+  "$PWD/.claude/skills/verify/scripts/run-verify.sh"
+)
 
-if [[ ! -f $RUNNER ]]; then
-  printf '[verify-hook] Runner not found: %s\n' "$RUNNER" >&2
+RUNNER=""
+for candidate in "${CANDIDATES[@]}"; do
+  if [[ -f $candidate ]]; then
+    RUNNER="$candidate"
+    break
+  fi
+done
+
+if [[ -z $RUNNER ]]; then
+  printf '[verify-hook] Verification runner not found.\n' >&2
   exit 0
 fi
 
