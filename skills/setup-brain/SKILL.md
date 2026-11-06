@@ -6,7 +6,7 @@ license: MIT
 compatibility: Works with Claude Code and Codex; requires Git for version control.
 metadata:
   source: https://github.com/Melvynx/ai-sprint-skills
-  version: "2.0.0"
+  version: "2.1.0"
 ---
 
 Set up a personal brain: one folder where work is organized by project, with a single `AGENTS.md`, project hubs and notes. Interview the user first, preserve existing content, and never overwrite files without confirmation.
@@ -35,5 +35,11 @@ Set up a personal brain: one folder where work is organized by project, with a s
 10. Install `connect-tool` and `skill-manager` only if absent, using the local repository when available. Never download arbitrary code without naming its source and asking for approval.
 11. Initialize Git with `git init`, create `.gitignore`, and make an initial commit only after the user confirms the created structure. Offer, but never perform, a private GitHub backup without explicit approval.
 12. If a Hermes server is configured and the user asks for it, apply the same output style through its documented setup command. Skip this step otherwise.
+
+## Skill boundaries
+
+`setup-brain` owns brain initialization and workspace conventions. It may create the conventional skill locations and ask `skill-manager` to install, update, remove, create, improve or audit skills. It must not implement skill installation, versioning, updates, removal, auditing or duplicate detection itself.
+
+When a skill operation is needed, hand off to `skill-manager` with the target brain or project folder. Preserve the brain structure and never let a skill installation alter `AGENTS.md`, project hubs or notes without explicit user approval.
 
 Finish with a checklist: interview confirmed, global rules updated, brain structure created, projects documented, Git initialized, tools installed if requested, and no unexpected files created.
