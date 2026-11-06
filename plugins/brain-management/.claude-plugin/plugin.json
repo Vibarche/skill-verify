@@ -1,0 +1,11 @@
+{
+  "name": "brain-management",
+  "version": "0.5.0",
+  "description": "Initialize and manage an agent brain while keeping skill lifecycle responsibilities separated.",
+  "author": {
+    "name": "agtktID"
+  },
+  "homepage": "https://github.com/agtktID/skill-verify",
+  "documentationUrl": "https://github.com/agtktID/skill-verify",
+  "skills": "../../skills"
+}
