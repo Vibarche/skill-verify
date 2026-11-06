@@ -1,10 +1,10 @@
-version: "0.4"
+version: "0.5"
 project: skill-verify
 description: >
-  Collection de skills de vérification et de développement agentique pour Claude Code, Hermes et decode.
-  Comprend le kit complet 5-skills pour créer, développer, tester, livrer et reviewer un projet de A à Z,
-  plus les skills de vérification automatique avec hooks, scripts et rapports structurés.
-  Mise à jour v0.4 : descriptions complètes sur tous les skills, alignement des targets et versions.
+  Collection de skills de vérification, de fiabilité et de développement agentique pour Claude Code,
+  Hermes et les agents compatibles Agent Skills. Comprend le kit projet complet, la vérification par
+  exécution, l'audit mémoire, la validation des appels MCP et la gestion des skills.
+  Mise à jour v0.5 : enregistrement de tous les skills présents dans le dépôt.
 
 # ─── SKILLS DE VÉRIFICATION ───────────────────────────────────────────
 
@@ -118,6 +118,61 @@ skills:
       - claude-code
       - agent-skills-compatible
     previous: project-ship
+
+# ─── RELIABILITY SUITE ────────────────────────────────────────────────
+
+  - name: agent-memory-audit
+    path: skills/agent-memory-audit
+    version: "1.0.0"
+    description: Audit basé sur les preuves des fichiers mémoire agent — liens cassés, statuts manquants et affirmations non supportées.
+    category: reliability
+    targets:
+      - claude-code
+      - agent-skills-compatible
+    scripts:
+      - skills/agent-memory-audit/scripts/agent_memory_audit.py
+
+  - name: mcp-agent-hallucination-check
+    path: skills/mcp-agent-hallucination-check
+    version: "1.0.1"
+    description: Vérification statique et read-only des appels MCP déclarés — outils inventés, arguments invalides, secrets exposés et appels destructifs.
+    category: reliability
+    targets:
+      - claude-code
+      - agent-skills-compatible
+    scripts:
+      - skills/mcp-agent-hallucination-check/scripts/mcp_contract_check.py
+
+# ─── AI SPRINT SUITE ──────────────────────────────────────────────────
+
+  - name: connect-tool
+    path: skills/connect-tool
+    version: "1.0.0"
+    description: Connecte un service externe approuvé via son CLI officiel ou génère un CLI Python minimal, avec validation read-only.
+    category: ai-sprint
+    targets:
+      - claude-code
+      - agent-skills-compatible
+
+  - name: setup-brain
+    path: skills/setup-brain
+    version: "2.1.0"
+    description: Initialise ou étend un brain agent — AGENTS.md, hubs projets, notes, règles de travail et historique Git.
+    category: ai-sprint
+    targets:
+      - claude-code
+      - agent-skills-compatible
+
+  - name: skill-manager
+    path: skills/skill-manager
+    version: "2.1.0"
+    description: Installe, liste, met à jour, supprime, crée, améliore et audite les Agent Skills pour Claude Code et Codex.
+    category: ai-sprint
+    targets:
+      - claude-code
+      - agent-skills-compatible
+    scripts:
+      - skills/skill-manager/scripts/skills.sh
 
 # ─── SKILLS EXISTANTS ─────────────────────────────────────────────────
 
