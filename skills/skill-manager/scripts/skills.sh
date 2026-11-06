@@ -43,6 +43,9 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
+# Restore positional arguments consumed while parsing options.
+set -- ${ARGS[@]+"${ARGS[@]}"}
+
 if [ -n "$TO" ]; then
   ROOT="$(cd "$TO" 2>/dev/null && pwd)" || { echo "not a folder: $TO" >&2; exit 4; }
   DEST="$ROOT/.agents/skills"
