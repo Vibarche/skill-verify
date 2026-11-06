@@ -29,6 +29,7 @@
 
 <p align="center">
   <a href="#-quick-start">Quick Start</a> ·
+  <a href="#-install-via-claude-code">Claude Code Marketplace</a> ·
   <a href="#-architecture">Architecture</a> ·
   <a href="#-project-suite-5-skills">Project Suite</a> ·
   <a href="#-verification-suite">Verification Suite</a> ·
@@ -178,6 +179,32 @@ chmod +x .claude/hooks/post-task.sh
 ```
 
 The hook automatically runs `/verify` after every completed task, step, or feature.
+
+---
+
+## 🧩 Install via Claude Code
+
+Add this repository as a Claude Code plugin marketplace:
+
+```text
+/plugin marketplace add agtktID/skill-verify
+```
+
+Then install one of the available plugin bundles:
+
+```text
+/plugin install reliability-core@skill-verify
+/plugin install brain-management@skill-verify
+/plugin install tooling@skill-verify
+```
+
+| Plugin | Included skills | Purpose |
+|---|---|---|
+| `reliability-core` | `agent-memory-audit`, `mcp-agent-hallucination-check` | Audit memory and detect MCP hallucinations, unsafe calls and missing confirmations |
+| `brain-management` | `setup-brain`, `skill-manager` | Initialize and manage an agent brain with separated responsibilities |
+| `tooling` | `connect-tool` | Connect and inspect external tools through a controlled interface |
+
+The skills remain maintained in `skills/`; the plugin bundles reference them without duplicating their source files.
 
 ---
 
@@ -437,6 +464,12 @@ bash .claude/skills/verify/scripts/ci.sh
 
 ```text
 skill-verify/
+├── .claude-plugin/
+│   └── marketplace.json             ← Claude Code plugin marketplace
+├── plugins/
+│   ├── reliability-core/            ← Memory audit + MCP hallucination check
+│   ├── brain-management/            ← Brain setup + skill lifecycle
+│   └── tooling/                     ← External tool connection
 ├── skills/
 │   ├── verify/                      ← Core verification skill
 │   ├── verify-feature-end2end/      ← E2E pipeline and PR gate
