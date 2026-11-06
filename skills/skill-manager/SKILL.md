@@ -6,7 +6,7 @@ license: MIT
 compatibility: Requires Bash; supports Linux, macOS and Windows through Git Bash or WSL.
 metadata:
   source: https://github.com/Melvynx/ai-sprint-skills
-  version: "2.0.0"
+  version: "2.1.0"
 ---
 
 Manage Agent Skills safely. A skill is a folder containing `SKILL.md`, optional `scripts/`, `references/` and `assets/`. Keep one canonical copy and use links elsewhere; never maintain two divergent copies.
@@ -16,6 +16,12 @@ Manage Agent Skills safely. A skill is a folder containing `SKILL.md`, optional 
 - Global skills: `~/.agents/skills/<name>/`, linked into `~/.claude/skills/` when needed.
 - Project or brain skills: `<folder>/.agents/skills/<name>/`, linked into `<folder>/.claude/skills/` when needed.
 - Installation metadata: `<skill>/.source`, containing the origin used for future updates.
+
+## Workspace boundary
+
+`skill-manager` owns the skill lifecycle: installation, inventory, updates, removal, creation, improvement and audit. When operating inside a brain initialized by `setup-brain`, respect that brain's existing structure and conventions, but do not initialize a brain, edit `AGENTS.md`, create project hubs, or organize notes.
+
+If a requested skill operation requires a brain, workspace convention, or documentation change, identify the need and ask the user or hand off to `setup-brain`. Never silently modify files outside the selected skill location.
 
 ## Install
 
