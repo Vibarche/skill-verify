@@ -103,7 +103,7 @@ class SkillsScriptTests(unittest.TestCase):
 
 
 class ConfigPermissionTest(unittest.TestCase):
-    def test_documented_config_mode_is restrictive(self):
+    def test_documented_config_mode_is_restrictive(self):
         self.assertEqual(stat.S_IRUSR | stat.S_IWUSR, 0o600)
 
 
