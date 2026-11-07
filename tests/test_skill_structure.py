@@ -78,9 +78,9 @@ class SkillStructureTests(unittest.TestCase):
                 f"SKILL.md missing for manifest skill: {item['name']}",
             )
 
-    def test_manifest_contains_all_eighteen_skills(self):
+    def test_manifest_contains_all_twenty_two_skills(self):
         manifest = yaml.safe_load(MANIFEST.read_text(encoding="utf-8"))
-        self.assertEqual(len(manifest["skills"]), 18)
+        self.assertEqual(len(manifest["skills"]), 22)
 
 
 if __name__ == "__main__":
