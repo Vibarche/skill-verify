@@ -1,0 +1,53 @@
+name: Plugin packaging
+on:
+  push:
+    branches: [main, fix/plugin-skill-packaging]
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: plugin-packaging-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  materialize:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/fix/plugin-skill-packaging' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/plugin-skill-packaging
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Build complete bundles and check reproducibility
+        run: |
+          python scripts/package_plugin_skills.py
+          python scripts/package_plugin_skills.py --check
+      - name: Commit generated files on repair branch only
+        run: |
+          test "$(git branch --show-current)" = fix/plugin-skill-packaging
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add plugins/reliability-core plugins/brain-management plugins/tooling plugins/agent-reliability-toolkit .claude-plugin/marketplace.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'fix: materialize complete plugin skills and bundled resources'
+            git push origin HEAD:refs/heads/fix/plugin-skill-packaging
+          fi
+  validate:
+    needs: materialize
+    if: always() && (needs.materialize.result == 'success' || needs.materialize.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'push' && github.ref == 'refs/heads/fix/plugin-skill-packaging' && 'fix/plugin-skill-packaging' || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify all four packaged bundles
+        run: python scripts/package_plugin_skills.py --check
+      - name: Run repository unit tests
+        run: python -m unittest discover -s tests -v
