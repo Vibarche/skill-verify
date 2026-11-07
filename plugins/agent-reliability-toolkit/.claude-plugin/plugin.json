@@ -1,6 +1,6 @@
 {
   "name": "agent-reliability-toolkit",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Skills pour concevoir, auditer et fiabiliser des agents IA : mémoire, multi-agents, évaluation, self-hosted, skillware et MCP.",
   "author": {
     "name": "agtktID"
