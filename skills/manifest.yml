@@ -3,9 +3,9 @@ project: skill-verify
 description: >
   Collection de skills de vérification, de fiabilité et de développement agentique pour Claude Code,
   Hermes et les agents compatibles Agent Skills. Comprend le kit projet complet, la vérification par
-  exécution, l'audit mémoire, la validation des appels MCP, la gestion des skills, ainsi qu'une suite
-  d'intelligence agentique (mémoire, multi-agents, évaluation, self-hosted).
-  Mise à jour v0.5 : enregistrement de tous les skills présents dans le dépôt.
+  exécution, l'audit mémoire, la validation des appels MCP, la gestion des skills, les outils
+  d'intégration et une suite d'intelligence agentique. Mise à jour v0.5 : enregistrement des
+  22 skills présents dans le dépôt.
 
 # ─── SKILLS DE VÉRIFICATION ───────────────────────────────────────────
 
