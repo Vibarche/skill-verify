@@ -23,7 +23,7 @@
     <img src="https://img.shields.io/github/v/release/agtktID/skill-verify.svg?style=flat-square" alt="Latest Release" />
   </a>
   <img src="https://img.shields.io/badge/works%20with-Claude%20Code%20%7C%20Codex%20%7C%20Cursor%20%7C%20Hermes-blueviolet?style=flat-square" alt="Works with" />
-  <img src="https://img.shields.io/badge/skills-18-blue?style=flat-square" alt="18 skills" />
+  <img src="https://img.shields.io/badge/skills-22-blue?style=flat-square" alt="22 skills" />
   <img src="https://img.shields.io/badge/tests-31%20passing-brightgreen?style=flat-square" alt="31 tests passing" />
 </p>
 
@@ -34,6 +34,7 @@
   <a href="#-project-suite-5-skills">Project Suite</a> ·
   <a href="#-verification-suite">Verification Suite</a> ·
   <a href="#-reliability-suite">Reliability Suite</a> ·
+  <a href="#-agentic-intelligence-suite-4-skills">Agentic Intelligence</a> ·
   <a href="#-ai-sprint-suite-3-skills">AI Sprint Suite</a> ·
   <a href="#-auto-trigger-hook">Auto-Trigger</a> ·
   <a href="#-full-skill-catalogue">All Skills</a> ·
@@ -44,16 +45,17 @@
 
 ## 🎯 What is skill-verify?
 
-**skill-verify** is an open-source collection of **18 Claude Code skills** designed to make AI agents
+**skill-verify** is an open-source collection of **22 Claude Code skills** designed to make AI agents
 **prove their work** instead of hallucinating results.
 
-It combines project delivery, execution-based verification, agent-memory auditing, MCP hallucination detection and reusable workspace tooling.
+It combines project delivery, execution-based verification, agent-memory auditing, MCP hallucination detection, agentic intelligence workflows and reusable workspace tooling.
 
 | Suite | Skills | Purpose |
 |-------|--------|---------|
 | 🏗️ **Project Suite** | `project-init` `project-build` `project-test` `project-ship` `project-review` | Build a complete project from idea to production |
 | 🛡️ **Verification Suite** | `verify` `verify-feature-end2end` `verify-context-health` `verify-unity-playmode` | Prove it works with real execution |
 | 🧠 **Reliability Suite** | `agent-memory-audit` `mcp-agent-hallucination-check` | Audit agent memory and validate claimed MCP tool usage |
+| 🤖 **Agentic Intelligence Suite** | `agent-memory-architect` `multi-agent-verifier` `agent-eval-designer` `self-hosted-stack-guide` | Design memory, multi-agent verification, evaluations and self-hosted AI stacks |
 | ⚡ **AI Sprint Suite** | `connect-tool` `setup-brain` `skill-manager` | Connect tools, organize an agent brain, and manage reusable skills |
 | ⚙️ **Auto-Trigger Hook** | `post-task.sh` + `hooks.json` | Automatically verify after every completed task |
 
@@ -77,6 +79,7 @@ flowchart LR
     Agent --> Project[🏗️ Project Suite]
     Agent --> Verify[🛡️ Verification Suite]
     Agent --> Reliability[🧠 Reliability Suite]
+    Agent --> Intelligence[🤖 Agentic Intelligence]
     Agent --> Sprint[⚡ AI Sprint Suite]
 
     subgraph Project[🏗️ Project Suite]
@@ -98,6 +101,14 @@ flowchart LR
         direction TB
         Memory[agent-memory-audit] --> Report1[Memory evidence report]
         MCP[mcp-agent-hallucination-check] --> Report2[MCP contract report]
+    end
+
+    subgraph Intelligence[🤖 Agentic Intelligence]
+        direction TB
+        MemoryArch[agent-memory-architect]
+        MultiAgent[multi-agent-verifier]
+        Evals[agent-eval-designer]
+        SelfHosted[self-hosted-stack-guide]
     end
 
     subgraph Sprint[⚡ AI Sprint Suite]
@@ -162,6 +173,12 @@ cp -r skill-verify/skills/project-review .claude/skills/
 # Reliability suite
 cp -r skill-verify/skills/agent-memory-audit .agents/skills/
 cp -r skill-verify/skills/mcp-agent-hallucination-check .agents/skills/
+
+# Agentic intelligence suite
+cp -r skill-verify/skills/agent-memory-architect .agents/skills/
+cp -r skill-verify/skills/multi-agent-verifier .agents/skills/
+cp -r skill-verify/skills/agent-eval-designer .agents/skills/
+cp -r skill-verify/skills/self-hosted-stack-guide .agents/skills/
 
 # AI Sprint suite
 cp -r skill-verify/skills/connect-tool .agents/skills/
@@ -356,6 +373,44 @@ The suite includes 31 structural and behavioral tests covering skill metadata, s
 
 ---
 
+## 🤖 Agentic Intelligence Suite (4 Skills)
+
+Design more capable, verifiable and self-hosted agent systems.
+
+### `/agent-memory-architect` — Design agent memory
+
+Designs a memory architecture for long-term context, retrieval and persistence.
+
+```text
+/agent-memory-architect
+```
+
+### `/multi-agent-verifier` — Verify complex work
+
+Creates planner/verifier workflows with state traces for complex or long-running tasks.
+
+```text
+/multi-agent-verifier
+```
+
+### `/agent-eval-designer` — Measure agent quality
+
+Generates benchmarks and self-evaluation tests for quality, robustness and reliability.
+
+```text
+/agent-eval-designer
+```
+
+### `/self-hosted-stack-guide` — Deploy local AI
+
+Guides deployment of a self-hosted AI stack for models, tools and agents.
+
+```text
+/self-hosted-stack-guide
+```
+
+---
+
 ## ⚡ AI Sprint Suite (3 Skills)
 
 The AI Sprint Suite manages the agent environment itself: connect external services, organize work by project, and install or maintain reusable skills.
@@ -450,13 +505,17 @@ bash .claude/skills/verify/scripts/ci.sh
 | 9 | [`project-review`](./skills/project-review/) | Project Suite | `/project-review` | Claude Code, Codex |
 | 10 | [`agent-memory-audit`](./skills/agent-memory-audit/) | Reliability | `/agent-memory-audit` | Claude Code, Codex |
 | 11 | [`mcp-agent-hallucination-check`](./skills/mcp-agent-hallucination-check/) | Reliability | `/mcp-agent-hallucination-check` | Claude Code, Codex |
-| 12 | [`skill-architect`](./skills/skill-architect/) | Meta | `/skill-architect` | Claude Code |
-| 13 | [`gauntlet-loop-dev`](./skills/gauntlet-loop-dev/) | Quality | `/gauntlet-loop-dev` | Claude Code |
-| 14 | [`indagis-feature-builder`](./skills/indagis-feature-builder/) | Project | `/indagis-feature-builder` | Claude Code |
-| 15 | [`unity-gamedev`](./skills/unity-gamedev/) | Game Dev | `/unity-gamedev` | Claude Code + Unity |
-| 16 | [`connect-tool`](./skills/connect-tool/) | AI Sprint | `/connect-tool` | Claude Code, Codex |
-| 17 | [`setup-brain`](./skills/setup-brain/) | AI Sprint | `/setup-brain` | Claude Code, Codex |
-| 18 | [`skill-manager`](./skills/skill-manager/) | AI Sprint | `/skill-manager` | Claude Code, Codex |
+| 12 | [`agent-memory-architect`](./skills/agent-memory-architect/) | Agentic Intelligence | `/agent-memory-architect` | Claude Code |
+| 13 | [`multi-agent-verifier`](./skills/multi-agent-verifier/) | Agentic Intelligence | `/multi-agent-verifier` | Claude Code |
+| 14 | [`agent-eval-designer`](./skills/agent-eval-designer/) | Agentic Intelligence | `/agent-eval-designer` | Claude Code |
+| 15 | [`self-hosted-stack-guide`](./skills/self-hosted-stack-guide/) | Agentic Intelligence | `/self-hosted-stack-guide` | Claude Code |
+| 16 | [`skill-architect`](./skills/skill-architect/) | Meta | `/skill-architect` | Claude Code |
+| 17 | [`gauntlet-loop-dev`](./skills/gauntlet-loop-dev/) | Quality | `/gauntlet-loop-dev` | Claude Code |
+| 18 | [`indagis-feature-builder`](./skills/indagis-feature-builder/) | Project | `/indagis-feature-builder` | Claude Code |
+| 19 | [`unity-gamedev`](./skills/unity-gamedev/) | Game Dev | `/unity-gamedev` | Claude Code + Unity |
+| 20 | [`connect-tool`](./skills/connect-tool/) | AI Sprint | `/connect-tool` | Claude Code, Codex |
+| 21 | [`setup-brain`](./skills/setup-brain/) | AI Sprint | `/setup-brain` | Claude Code, Codex |
+| 22 | [`skill-manager`](./skills/skill-manager/) | AI Sprint | `/skill-manager` | Claude Code, Codex |
 
 ---
 
@@ -482,6 +541,10 @@ skill-verify/
 │   ├── project-review/              ← Code and architecture review
 │   ├── agent-memory-audit/          ← Evidence-based memory audit
 │   ├── mcp-agent-hallucination-check/ ← Read-only MCP contract checker
+│   ├── agent-memory-architect/      ← Memory architecture design
+│   ├── multi-agent-verifier/        ← Planner / verifier workflows
+│   ├── agent-eval-designer/         ← Agent evaluation benchmarks
+│   ├── self-hosted-stack-guide/     ← Self-hosted AI deployment
 │   ├── skill-architect/             ← Skill design guidance
 │   ├── gauntlet-loop-dev/           ← Quality iteration loop
 │   ├── indagis-feature-builder/     ← Feature builder
