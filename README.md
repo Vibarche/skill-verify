@@ -213,6 +213,7 @@ Then install one of the available plugin bundles:
 /plugin install reliability-core@skill-verify
 /plugin install brain-management@skill-verify
 /plugin install tooling@skill-verify
+/plugin install agent-reliability-toolkit@skill-verify
 ```
 
 | Plugin | Included skills | Purpose |
@@ -220,6 +221,7 @@ Then install one of the available plugin bundles:
 | `reliability-core` | `agent-memory-audit`, `mcp-agent-hallucination-check` | Audit memory and detect MCP hallucinations, unsafe calls and missing confirmations |
 | `brain-management` | `setup-brain`, `skill-manager` | Initialize and manage an agent brain with separated responsibilities |
 | `tooling` | `connect-tool` | Connect and inspect external tools through a controlled interface |
+| `agent-reliability-toolkit` | `agent-memory-architect`, `multi-agent-verifier`, `agent-eval-designer`, `self-hosted-stack-guide`, `skill-architect`, `mcp-agent-hallucination-check` | Design, audit and harden AI agents: memory, multi-agent verification, evaluation, self-hosted deployment and MCP reliability |
 
 The skills remain maintained in `skills/`; the plugin bundles reference them without duplicating their source files.
 
@@ -528,7 +530,8 @@ skill-verify/
 ├── plugins/
 │   ├── reliability-core/            ← Memory audit + MCP hallucination check
 │   ├── brain-management/            ← Brain setup + skill lifecycle
-│   └── tooling/                     ← External tool connection
+│   ├── tooling/                     ← External tool connection
+│   └── agent-reliability-toolkit/   ← Memory, multi-agent, evaluation and self-hosted AI
 ├── skills/
 │   ├── verify/                      ← Core verification skill
 │   ├── verify-feature-end2end/      ← E2E pipeline and PR gate
