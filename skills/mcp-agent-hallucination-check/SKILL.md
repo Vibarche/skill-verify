@@ -6,7 +6,7 @@ license: MIT
 compatibility: Requires Python 3.10+; performs no network calls.
 metadata:
   source: https://arxiv.org/abs/2611.07689
-  version: "1.0.1"
+  version: "1.1.0"
 ---
 
 Check whether an agent workflow uses MCP tools truthfully. This skill is read-only: it never calls an MCP server, executes a tool, or modifies configuration.
@@ -30,8 +30,15 @@ python3 scripts/mcp_contract_check.py <input-file> --config <mcp-config.json>
 - Destructive operation presented as safe or automatic.
 - Credential, token, or secret exposed in a transcript.
 
-6. Use `references/hallucination-checklist.md` for the full review sequence.
-7. Produce a report with `references/report-template.md`. State evidence for every finding; never label something a hallucination without a concrete mismatch.
-8. Propose corrections, but do not edit workflow files or MCP configuration without approval.
+6. Map findings to the four MCPHallu failure modes:
+
+- **Unreachable Goal** : la tâche est irréalisable ou un prérequis manque, mais l'agent insiste ou prétend avoir réussi.
+- **Branch Collapse** : l'agent perd sa trajectoire de planification après une réponse inattendue d'un serveur.
+- **Tool Misuse** : mauvaise sérialisation ou mauvais usage des paramètres d'appel.
+- **Context Forgetting** : l'agent oublie les retours d'exécution précédents lors de sessions multi-serveurs.
+
+7. Use `references/hallucination-checklist.md` for the full review sequence.
+8. Produce a report with `references/report-template.md`. State evidence for every finding; never label something a hallucination without a concrete mismatch.
+9. Propose corrections, but do not edit workflow files or MCP configuration without approval.
 
 If no MCP configuration or tool contract is available, report `UNVERIFIABLE`, list the missing evidence, and ask for the configuration or tool schema.

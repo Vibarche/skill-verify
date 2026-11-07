@@ -4,12 +4,12 @@ description: >-
   Conçoit, audite, refactore et évalue des skills et prompts de production.
   Utiliser pour créer un nouveau SKILL.md, auditer un skill existant, structurer un system prompt,
   définir une équipe d'agents ou construire un workflow agentique robuste.
-version: "1.1.0"
+version: "1.2.0"
 license: MIT
 metadata:
   author: agtktID
   repo: https://github.com/agtktID/skill-verify
-  updated: 2026-09-22
+  updated: 2026-11-07
   tags:
     - skills
     - prompts
@@ -18,6 +18,7 @@ metadata:
     - security
     - system-prompt
     - agent-design
+    - skillware
 allowed-tools:
   - Bash
   - Read
@@ -42,19 +43,12 @@ Utiliser ce skill pour :
 - **Versionner** et documenter les changements de skills.
 - **Concevoir** une équipe d'agents ou un workflow agentique multi-skills.
 - **Évaluer** les should-trigger / should-not-trigger d'un skill.
+- **Convertir un prompt en Skillware** : schéma typé, code déterministe, tests et données embarquées.
 
 Ne pas utiliser pour :
 
 - Exécuter du code ou valider des builds (utiliser `verify` ou `gauntlet-loop-dev` pour ça).
 - Tâches sans besoin de conception ou d'architecture.
-
----
-
-## 🔧 Pré-requis
-
-- Le nom du skill ou la description de la tâche à réaliser.
-- Si audit : le contenu actuel du `SKILL.md` ou du system prompt.
-- Si création : le runtime cible (claude-code, hermes, decode, etc.) et les outils autorisés.
 
 ---
 
@@ -87,6 +81,20 @@ Avant de concevoir ou d'auditer un skill, extraire ces 5 éléments :
 7. **Vérifier la sécurité** : pas de secrets en clair, pas d'actions destructives sans confirmation, pas de prompt injection possible.
 8. **Tester** should-trigger et should-not-trigger plusieurs fois avec des cas représentatifs.
 9. **Versionner** et documenter chaque changement dans un CHANGELOG ou dans le frontmatter.
+
+---
+
+## 🧩 Mode Skillware (nouveau)
+
+Lorsque l'utilisateur demande de transformer un prompt en capacité déterministe :
+
+1. Définir un contrat d'entrée typé (JSON Schema).
+2. Écrire le code déterministe (Python ou TypeScript).
+3. Ajouter des tests unitaires.
+4. Fournir des exemples de données.
+5. Générer le SKILL.md final.
+
+Objectif : réduire la dépendance aux longs prompts, améliorer l'auditabilité et la fiabilité.
 
 ---
 
@@ -129,5 +137,6 @@ Avant de concevoir ou d'auditer un skill, extraire ces 5 éléments :
 <ce que le skill ne couvre pas ou pourrait mal gérer>
 
 ### Changelog
-- v1.1.0 : <description du changement>
+- v1.2.0 : ajout du mode Skillware (schéma, code, tests, données).
+- v1.1.0 : version initiale enrichie.
 ```
