@@ -3,9 +3,8 @@ project: skill-verify
 description: >
   Collection de skills de vérification, de fiabilité et de développement agentique pour Claude Code,
   Hermes et les agents compatibles Agent Skills. Comprend le kit projet complet, la vérification par
-  exécution, l'audit mémoire, la validation des appels MCP, la gestion des skills, ainsi qu'une suite
-  d'intelligence agentique (mémoire, multi-agents, évaluation, self-hosted).
-  Mise à jour v0.5 : enregistrement de tous les skills présents dans le dépôt.
+  exécution, l'audit mémoire, la validation des appels MCP, la gestion des skills et les outils
+  d'intégration. Mise à jour v0.5 : enregistrement des 18 skills présents dans le dépôt.
 
 # ─── SKILLS DE VÉRIFICATION ───────────────────────────────────────────
 
@@ -174,44 +173,6 @@ skills:
       - agent-skills-compatible
     scripts:
       - skills/skill-manager/scripts/skills.sh
-
-# ─── AGENTIC INTELLIGENCE SUITE ───────────────────────────────────────
-
-  - name: agent-memory-architect
-    path: skills/agent-memory-architect
-    version: "1.0.0"
-    description: Conçoit une architecture de mémoire pour agent IA, avec compression locale et globale. Utiliser pour améliorer la mémoire longue, le RAG ou la persistance.
-    category: agentic-intelligence
-    targets:
-      - claude-code
-      - agent-skills-compatible
-
-  - name: multi-agent-verifier
-    path: skills/multi-agent-verifier
-    version: "1.0.0"
-    description: Crée un workflow multi-agents avec séparation planificateur / vérificateur et traces d’états. Utiliser pour fiabiliser un raisonnement complexe ou une tâche longue.
-    category: agentic-intelligence
-    targets:
-      - claude-code
-      - agent-skills-compatible
-
-  - name: agent-eval-designer
-    path: skills/agent-eval-designer
-    version: "1.0.0"
-    description: Génère des benchmarks et tests d’auto-évaluation pour agents IA. Utiliser pour mesurer la qualité, la robustesse ou la fiabilité d’un agent.
-    category: agentic-intelligence
-    targets:
-      - claude-code
-      - agent-skills-compatible
-
-  - name: self-hosted-stack-guide
-    path: skills/self-hosted-stack-guide
-    version: "1.0.0"
-    description: Guide le déploiement d’une stack IA self-hosted pour startup ou projet SaaS. Utiliser pour héberger modèles, outils ou agents en local.
-    category: agentic-intelligence
-    targets:
-      - claude-code
-      - agent-skills-compatible
 
 # ─── SKILLS EXISTANTS ─────────────────────────────────────────────────
 
