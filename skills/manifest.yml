@@ -135,7 +135,7 @@ skills:
 
   - name: mcp-agent-hallucination-check
     path: skills/mcp-agent-hallucination-check
-    version: "1.0.1"
+    version: "1.1.0"
     description: Vérification statique et read-only des appels MCP déclarés — outils inventés, arguments invalides, secrets exposés et appels destructifs.
     category: reliability
     targets:
@@ -217,7 +217,7 @@ skills:
 
   - name: skill-architect
     path: skills/skill-architect
-    version: "1.1.0"
+    version: "1.2.0"
     description: Conçoit, audite et refactore des skills et system prompts. Crée des SKILL.md production-ready avec frontmatter, trigger, sécurité et evals.
     category: meta
     targets:
