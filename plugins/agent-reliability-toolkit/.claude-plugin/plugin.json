@@ -2,13 +2,9 @@
   "name": "agent-reliability-toolkit",
   "version": "1.0.0",
   "description": "Skills pour concevoir, auditer et fiabiliser des agents IA : mémoire, multi-agents, évaluation, self-hosted, skillware et MCP.",
-  "author": { "name": "agtktID" },
-  "skills": [
-    "../../skills/agent-memory-architect",
-    "../../skills/multi-agent-verifier",
-    "../../skills/agent-eval-designer",
-    "../../skills/self-hosted-stack-guide",
-    "../../skills/skill-architect",
-    "../../skills/mcp-agent-hallucination-check"
-  ]
+  "author": {
+    "name": "agtktID"
+  },
+  "homepage": "https://github.com/agtktID/skill-verify",
+  "skills": "./skills"
 }
