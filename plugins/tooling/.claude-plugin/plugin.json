@@ -1,10 +1,10 @@
 {
   "name": "tooling",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Connect and inspect external tools through a controlled interface.",
   "author": {
     "name": "agtktID"
   },
   "homepage": "https://github.com/agtktID/skill-verify",
-  "documentationUrl": "https://github.com/agtktID/skill-verify"
+  "skills": "./skills"
 }

@@ -1,34 +1,36 @@
 {
   "name": "skill-verify",
   "description": "Reliability suite for AI agents: memory audits, MCP hallucination checks, action guardrails, manifest consistency, and agentic intelligence skills.",
-  "owner": { "name": "agtktID" },
+  "owner": {
+    "name": "agtktID"
+  },
   "plugins": [
     {
       "name": "reliability-core",
       "source": "./plugins/reliability-core",
       "description": "Audit agent memory and detect MCP hallucinations, unsafe tool calls and missing confirmations.",
-      "version": "0.5.0",
+      "version": "0.5.1",
       "category": "reliability"
     },
     {
       "name": "brain-management",
       "source": "./plugins/brain-management",
       "description": "Initialize and manage an agent brain while keeping skill lifecycle responsibilities separated.",
-      "version": "0.5.0",
+      "version": "0.5.1",
       "category": "agent-memory"
     },
     {
       "name": "tooling",
       "source": "./plugins/tooling",
       "description": "Connect and inspect external tools through a controlled interface.",
-      "version": "0.5.0",
+      "version": "0.5.1",
       "category": "integrations"
     },
     {
       "name": "agent-reliability-toolkit",
       "source": "./plugins/agent-reliability-toolkit",
       "description": "Design, audit and harden AI agents: memory architecture, multi-agent verification, evaluation, self-hosted deployment, skillware and MCP reliability.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "category": "agentic-intelligence"
     }
   ]
