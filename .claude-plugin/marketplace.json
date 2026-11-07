@@ -1,9 +1,7 @@
 {
   "name": "skill-verify",
-  "description": "Reliability suite for AI agents: memory audits, MCP hallucination checks, action guardrails and manifest consistency.",
-  "owner": {
-    "name": "agtktID"
-  },
+  "description": "Reliability suite for AI agents: memory audits, MCP hallucination checks, action guardrails, manifest consistency, and agentic intelligence skills.",
+  "owner": { "name": "agtktID" },
   "plugins": [
     {
       "name": "reliability-core",
@@ -25,6 +23,13 @@
       "description": "Connect and inspect external tools through a controlled interface.",
       "version": "0.5.0",
       "category": "integrations"
+    },
+    {
+      "name": "agent-reliability-toolkit",
+      "source": "./plugins/agent-reliability-toolkit",
+      "description": "Design, audit and harden AI agents: memory architecture, multi-agent verification, evaluation, self-hosted deployment, skillware and MCP reliability.",
+      "version": "1.0.0",
+      "category": "agentic-intelligence"
     }
   ]
 }
